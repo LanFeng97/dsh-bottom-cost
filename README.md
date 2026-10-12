@@ -4,7 +4,7 @@
 
 A **session cost** chip for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): it sits in the same row as the built-in stats pills under the composer and answers "what has this conversation cost" and "what did the last turn cost" at a glance, splitting the spend into **cache-hit** and **cache-miss** parts.
 
-![The session cost chip and its expanded panel](docs/session-cost-panel.png)
+![The cost chip in the composer stats row, and its expanded panel](docs/session-cost-panel.png)
 
 ## Install
 
@@ -44,7 +44,7 @@ A manual copy install is **complete on its own**: this plugin has **no runtime d
 
 ## How to read the UI
 
-In the screenshot: the panel is the expanded part, and the strip at the very bottom is the **stats row under the composer** (the chip lives in the same row as the built-in session-stats and token-usage pills).
+In the screenshot: the bottom line is the **stats row under the composer** — `◎ ¥5.294 · ¥0.9230` is this plugin, sitting in the same row as the built-in `15 轮 388 步 · 228 tok/s` (session stats) and `147M tok · 缓存命中 99%` (token usage) pills, with the context meter at the far right. Above it is the **expanded panel**.
 
 **The chip in the stats row**
 

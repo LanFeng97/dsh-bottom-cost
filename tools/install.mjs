@@ -5,10 +5,10 @@
  * 1. 把本包**复制**进 `<profile>/node_modules/dsh-session-cost`；
  * 2. 在 `<profile>/cordis.patch.yml` 里补上本插件的 loader 行（已存在就跳过）。
  *
- * 为什么是复制而不是目录联结：Windows 上联结会被 Node realpath 回本仓库路径，
- * 于是 `lib/projection.js` 里的裸导入 `zod` 会从本仓库往上找而**找不到**（工作区没有
- * node_modules），插件在装载阶段就炸。复制进 profile 后，`zod` 从 profile 自己的
- * node_modules 解析，与 profile 里其它本地插件（dsh-skill-panel）完全同构。
+ * 为什么是复制而不是目录联结：Windows 上联结会被 Node realpath 回本仓库路径，于是**将来任何
+ * 对三方包的裸导入**都会从本仓库往上找而找不到（工作区没有 node_modules），插件在装载阶段就炸
+ * ——0.2.0 里那个短命的 `zod` 导入就是这么暴露的。0.2.1 起本插件零三方依赖，所以今天用联结
+ * 也能跑；保留复制是为了与 profile 里其它本地插件（dsh-skill-panel）同构，并且不会再以这种方式坏掉。
  * 代价是改完代码要重跑一次本脚本 —— 它就是为这一步准备的。
  *
  * 用法：
@@ -17,7 +17,6 @@
  */
 
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
 
@@ -111,25 +110,9 @@ if (patch.includes(PACKAGE_NAME)) {
   console.log(`已在 patch 追加 loader 行：${patchPath}`)
 }
 
-// ---- 3. 依赖检查 ----------------------------------------------------------
+// ---- 3. 收尾 --------------------------------------------------------------
 
-// 宿主半区裸导入 `zod`（投影 schema）。**复制安装不会带依赖**，而缺了它插件会在装载
-// 阶段直接失败——界面上什么都看不到，用户完全无从判断。所以这里主动探一次，
-// 缺了就给出可执行的补装命令。（走插件市场 / npm 安装时依赖会一起装上，不会触发。）
-const zodProbe = createRequire(path.join(profileDir, 'index.js'))
-try {
-  zodProbe.resolve('zod')
-  console.log('依赖检查：profile 里能解析到 zod ✓')
-} catch {
-  console.warn([
-    '',
-    '⚠ 这个 profile 里解析不到 zod —— 本插件的宿主半区 import 它做投影 schema，',
-    '  缺了它插件会在装载阶段失败（界面上不会出现任何东西）。复制安装不会带依赖。',
-    '  在 profile 目录补装一次即可：',
-    `    cd "${profileDir}"`,
-    '    pnpm add zod      # 或用 npm i zod；DSH 自带 pnpm 在 <DSH 安装目录>/resources/runtime/pnpm',
-    '  （用插件市场 / npm 安装本插件则无需这一步：依赖会随之装上。）',
-  ].join('\n'))
-}
+// 本插件**零运行时依赖**（形状校验用自带的 lib/shape.js，不再依赖 zod），
+// 所以复制安装就是完整的安装，不需要再检查或补装任何包。
 
 console.log(dryRun ? '\n（dry-run，未改动任何文件）' : '\n完成。宿主半区需要重启 DSH 生效；浏览器半区刷新页面即可。')

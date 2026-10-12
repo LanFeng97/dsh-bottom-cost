@@ -3,6 +3,19 @@
 本插件的所有显著变更。版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)；
 投影状态的形状变化会体现为 `stateVersion` 递增（旧检查点会自动作废并重放，不需要你手工清理）。
 
+## [0.2.1] - 2026-10-13
+
+### 变更
+
+- **去掉唯一的运行时依赖 `zod`，改为自带的 `lib/shape.js`**（约 90 行，零依赖）。
+  投影注册表只对 schema 调用 `.parse`，所以契约是鸭子类型的，手写完全够用；
+  而 README 首推的复制式安装不带依赖，缺了 zod 插件会在装载阶段静默失败。
+  现在 `git clone` + `node tools/install.mjs` **开箱即用**，不需要联网、不需要补装任何包。
+  - 形状与 `stateVersion` 均未变化，旧检查点继续有效。
+  - 一处**刻意比 zod 更严**：`NaN` / `Infinity` 一律拒绝（会静默污染累计值）。
+  - 代价：将来给状态加字段要同步改 `lib/shape.js`（两者同文件、且由 `selftest` / `schema-check` 守着）。
+- `tools/install.mjs`：移除 zod 依赖探测（已无依赖可探测）；修掉 `--dry-run` 仍会 `mkdir` 的问题——现在真的不写任何文件。
+
 ## [0.2.0] - 2026-10-13
 
 ### 文档
@@ -26,7 +39,7 @@
   （`stateVersion` 1 → 2）。因此采用新价目后整段对话立刻重算，不会出现两代价格混在一本账里。
 - 面板标题行与价目来源行分行显示；面板固定宽度，任何长文案都不会再撑开它。
 
-## [0.1.0] - 2026-10-13
+## 0.1.0 - 2026-10-13（仓库建立前，仅存档）
 
 ### 新增
 
@@ -38,5 +51,5 @@
   每次调用按**发生时刻**的档位计费。
 - 非 DeepSeek 官方路由一律「未计价」并统计次数，不假装是 0 元。
 
+[0.2.1]: https://github.com/LanFeng97/dsh-session-cost/releases/tag/v0.2.1
 [0.2.0]: https://github.com/LanFeng97/dsh-session-cost/releases/tag/v0.2.0
-[0.1.0]: https://github.com/LanFeng97/dsh-session-cost/releases/tag/v0.1.0

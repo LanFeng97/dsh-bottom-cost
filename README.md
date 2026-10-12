@@ -38,13 +38,9 @@ node tools/install.mjs web              # target another profile (default: deskt
 
 **Then restart DeepSeek Harness.** The host half is a Node module, so a config reload alone will not import it. After that, changing `lib/client.js` only needs a page refresh; changing `lib/index.js` still needs a restart.
 
-Installing by **copy** rather than a directory junction is intentional: on Windows a junction is realpath-resolved back into the clone, and the plugin's `zod` import would then resolve from the clone directory, where there is no `node_modules` — the plugin would fail at load time.
+Installing by **copy** rather than a directory junction is deliberate: a junction gets realpath-resolved back into the clone, so any future bare import of a third-party package would resolve against the clone directory (which has no `node_modules`) and fail at load time — that is exactly how the short-lived `zod` import behaved in 0.2.0. Since 0.2.1 the plugin has no bare third-party imports, so a junction would work today; copy is kept because it matches the convention of the other plugins here and cannot break that way again.
 
-A manual copy install **does not bring dependencies**: the host half needs `zod` for the projection schemas. A market / npm install brings it along; if your profile has no `zod` when installing manually, `tools/install.mjs` says so explicitly (without it the plugin fails at load time) — add it once, as the message tells you:
-
-```sh
-cd <your profile directory> && pnpm add zod
-```
+A manual copy install is **complete on its own**: this plugin has **no runtime dependencies at all** — its shape validation is a ~90-line file it ships (`lib/shape.js`), so there is nothing extra to install and nothing to fetch.
 
 ## How to read the UI
 
@@ -115,6 +111,12 @@ The price list is stored in `<DSH_HOME>/dsh-session-cost/pricebook.json` (atomic
 - The three price routes are **loopback + same-origin fenced** (the same guard sibling DSH plugins use).
 - The host half reads no credentials, writes no session data, and runs no timers.
 
+### Why the shape validation is hand-rolled
+
+DSH's projection registry asks each unit for a `stateSchema` and a `wire.viewSchema`, and **only ever calls `.parse` on them** (six call sites in `@deepseek-ai/dsh-session-projection`; no `safeParse`, no `optional`, no `refine`). That contract is duck-typed, so `lib/shape.js` implements exactly the seven predicates this plugin needs — object, string, finite number, boolean, array, enum, nullable — in about 90 dependency-free lines.
+
+The alternative was `zod`, as DSH's own `dsh-token-meter` uses. It is not wrong, but for this plugin it loses: the published package is 840 files / 5.86 MB (even a trimmed v4-ESM subset is 111 files / 886 KB), and the README's primary install path is a *copy* install that does not bring dependencies along — so shipping zod would mean either a large vendored blob, or a pnpm/network step that rewrites your profile's `package.json`. Hand-rolling keeps that path genuinely self-contained. It is slightly *stricter* than zod in one place: `NaN` and `Infinity` are rejected (they would silently poison a running total), and it is covered by the self-test suite directly — which zod, being a third-party import, could not be.
+
 ## How it works
 
 ### Official extension points, not DOM injection
@@ -138,7 +140,7 @@ The host registers a **session projection unit** (`sessionCost`) and the browser
 | `lib/fold.js` | Pure fold: session events → per-turn token facts. Zero dependencies. |
 | `lib/pricing.js` | Pure pricing: peak/off-peak clock, model→price-row decision, tokens→money. Zero dependencies. |
 | `lib/pricebook.js` | Pure price book: built-in table, strict validation, official-page parser. Zero dependencies. |
-| `lib/projection.js` | Thin adapter: zod schemas + the client view. |
+| `lib/projection.js` | Thin adapter: the shape schemas + the client view. |
 | `lib/pricebook-store.js` | Fetch, stage a candidate, apply, persist. |
 | `lib/routes.js`, `lib/guard.js` | Loopback-fenced HTTP translation. |
 | `lib/client.js` | The chip and the panel; computes money from facts × the active book. |
@@ -151,15 +153,15 @@ npm run test:live     # node tools/live-check.mjs — fetch the real page, parse
 npm run test:schema   # node tools/schema-check.mjs — schema ↔ state ↔ view consistency, from the installed copy
 ```
 
-`selftest` covers peak/off-peak and holiday exceptions, the parser (against a checked-in snapshot of the official page), price-book validation, re-pricing under a different book, per-bucket aggregation, replay idempotence, JSON-safe state, list trimming, and the client's i18n key set.
+`selftest` covers peak/off-peak and holiday exceptions, the parser (against a checked-in snapshot of the official page), price-book validation, re-pricing under a different book, per-bucket aggregation, replay idempotence, JSON-safe state, list trimming, the client's i18n key set, and — since the validators are now the plugin's own code — the projection schemas themselves (unknown fields stripped, wrong types rejected with a path, `NaN` refused).
 
-`test:schema` exists because `selftest` deliberately has no third-party imports (it must run without `node_modules`) and therefore **cannot see the zod schemas** — a mismatch between `viewOf()` and the view schema makes every projection read throw at runtime, and that seam did break once. It has its own guard now.
+`test:schema` is a different kind of check: it imports the copy that is **actually installed in the profile** and drives state → view → schema through it, so it catches both "the installed files can load" and "`viewOf()` and the view schema still agree field-for-field". That second seam broke once in development; it has its own guard now.
 
 ## Compatibility
 
 - DSH **≥ 0.2.0-rc.2** (built and verified against 0.2.0-rc.2).
 - Node **≥ 20**.
-- One runtime dependency: `zod` ^4, for the projection schemas.
+- **No runtime dependencies.** The projection schemas are validated by the plugin's own `lib/shape.js`.
 
 ## License
 
@@ -174,8 +176,7 @@ Two pieces are not original to this plugin and keep their upstream credit:
 
 Both bullets above are **credits only**: the rules and data were **copied into this plugin's source**. This plugin does **not `import` dsh-usage, and does not import any `@linxin666/*` package**. Uninstall dsh-usage, upgrade it, rename it — this plugin keeps working. The flip side: when the official prices change, the two **copies** each need updating (that is what "same tariff interpretation" is warning about).
 
-The only third-party runtime dependency is **`zod` ^4**, used for the projection schemas. A market / npm install brings it along; for the manual copy install, see the note in **Install** above.
-
+**Zero runtime dependencies.** Nothing to install alongside, nothing to keep in sync: the projection schemas come from the plugin's own `lib/shape.js` (see "Why the shape validation is hand-rolled" above).
 ## Related
 
 - [dsh-workspace-create-dialog](https://github.com/LanFeng97/dsh-workspace-create-dialog) — the sibling plugin by the same author, for the Create Workspace dialog.

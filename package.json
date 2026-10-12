@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-cost",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "DSH 会话费用统计：在输入框正下方的统计栏里加一颗费用胶囊，显示本对话累计费用与最近一轮费用，点开向上展开为「总命中/未命中费用 + 按轮明细」；金额按 token 事实在本地按当前价目表现算，可一键抓取官方价目页更新。 · A session-cost chip for DeepSeek Harness: this conversation's total and last-turn spend, an upward panel with cache-hit vs cache-miss totals and a per-turn breakdown, priced locally from token facts with a one-click official price-list refresh.",
   "license": "MIT",
   "author": "LanFeng97",
@@ -56,9 +56,6 @@
       ],
       "platform": "web"
     }
-  },
-  "dependencies": {
-    "zod": "^4.6.5"
   },
   "files": [
     "lib",

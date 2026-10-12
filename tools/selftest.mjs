@@ -16,6 +16,7 @@ import path from 'node:path'
 import { deepseekPeriodAt, isDeepSeekProviderRoute, isDowngradedPro, priceRowKeyFor, spendFor } from '../lib/pricing.js'
 import { BUILTIN_PRICE_BOOK, describePriceChanges, parseOfficialPricingPage, validatePriceBook } from '../lib/pricebook.js'
 import { MAX_RETAINED_TURNS, applyEvent, initState, viewOf } from '../lib/fold.js'
+import { sessionCostStateSchema, sessionCostViewSchema } from '../lib/projection.js'
 
 /** 断言计数与失败收集。 */
 let passed = 0
@@ -189,8 +190,8 @@ check('状态里的一轮保留时间事实', JSON.stringify(stateTurnKeys) === 
 const bucketKeys = Object.keys(view.turns[0].buckets[0]).sort()
 check('桶只有 model/peak/priceable/row/tokens', JSON.stringify(bucketKeys) === JSON.stringify(['model', 'peak', 'priceable', 'row', 'tokens']), bucketKeys)
 check('状态与视图里都没有 cost 字段', !JSON.stringify(state).includes('"cost"') && !JSON.stringify(view).includes('"cost"'))
-// 视图与状态这两套字段必须与 projection.js 的 zod schema 对齐；自测看不见 schema
-// （刻意不依赖 zod），那道缝由 tools/schema-check.mjs 守。
+// 视图与状态这两套字段必须与 projection.js 的 schema 逐字段对齐。
+// 注意：这一层**能**在这里测（校验器是自带代码），而"装上的那份副本"另由 tools/schema-check.mjs 守。
 
 // ---------------------------------------------------------------- 边界与不变式
 
@@ -238,6 +239,80 @@ for (let i = 0; i < MAX_RETAINED_TURNS + 5; i += 1) {
 const long = fold(many)
 check(`明细裁剪到 ${MAX_RETAINED_TURNS} 轮`, long.turns.length === MAX_RETAINED_TURNS, long.turns.length)
 check('裁剪后保留的是最新的轮', long.turns[long.turns.length - 1].index === MAX_RETAINED_TURNS + 5)
+
+// ---------------------------------------------------------------- 形状校验器（lib/shape.js）
+
+// 校验器是本仓库自带的（不再依赖 zod），所以能在这里直接测——这是换成手写校验器的一个额外好处：
+// 投影 schema 的行为第一次变得可自测。
+const goodState = sessionCostStateSchema.parse(JSON.parse(JSON.stringify(state)))
+check('状态过 stateSchema', goodState.turns.length === 2)
+check('视图过 viewSchema', sessionCostViewSchema.parse(viewOf(goodState)).turns.length === 2)
+check('冷状态过 stateSchema', sessionCostStateSchema.parse(initState()).turns.length === 0)
+
+check('未声明的字段被丢弃（与 zod 的 object 默认行为一致）', (() => {
+  const parsed = sessionCostStateSchema.parse({ ...state, 多余的字段: 1, turns: state.turns.map((turn) => ({ ...turn, 也不该留: true })) })
+  return !Object.hasOwn(parsed, '多余的字段') && !Object.hasOwn(parsed.turns[0], '也不该留')
+})())
+
+check('类型不符被拒且给出路径', (() => {
+  try {
+    sessionCostStateSchema.parse({ ...state, turns: [{ ...state.turns[0], index: '一' }] })
+    return false
+  } catch (error) {
+    return error.message.startsWith('turns[0].index: expected number, got string')
+  }
+})())
+
+check('缺失字段被拒', (() => {
+  try {
+    sessionCostStateSchema.parse({ provider: 'x', model: 'y', turnsStarted: 0, unpricedCalls: 0 })
+    return false
+  } catch (error) {
+    return error.message.includes('turns: expected array, got undefined')
+  }
+})())
+
+check('NaN / Infinity 被拒（刻意比 zod 更严）', (() => {
+  const bad = { ...state, turnsStarted: Number.NaN }
+  try {
+    sessionCostStateSchema.parse(bad)
+    return false
+  } catch (error) {
+    // 报错要能一眼看出是 NaN，而不是自相矛盾的 "expected number, got number"
+    return error.message === 'turnsStarted: expected number, got NaN'
+  }
+})())
+
+check('未知的价目行被拒（枚举生效）', (() => {
+  const bad = { ...state, turns: [{ ...state.turns[0], buckets: [{ ...state.turns[0].buckets[0], row: 'v4' }] }] }
+  try {
+    sessionCostStateSchema.parse(bad)
+    return false
+  } catch (error) {
+    return error.message.includes('turns[0].buckets[0].row: expected one of flash/pro, got string')
+  }
+})())
+
+check('null 只被 nullable 接受', (() => {
+  const okTurn = { ...state.turns[1], endedAtMs: null }
+  const accepted = sessionCostStateSchema.parse({ ...state, turns: [state.turns[0], okTurn] })
+  if (accepted.turns[1].endedAtMs !== null) return false
+  try {
+    sessionCostStateSchema.parse({ ...state, turns: [{ ...state.turns[0], endedAtMs: undefined }] })
+    return false
+  } catch {
+    return true
+  }
+})())
+
+check('数组/对象本身类型不对时被拒', (() => {
+  try {
+    sessionCostStateSchema.parse({ ...state, turns: {} })
+    return false
+  } catch (error) {
+    return error.message.includes('turns: expected array, got object')
+  }
+})())
 
 // ---------------------------------------------------------------- 客户端文案（静态检查）
 

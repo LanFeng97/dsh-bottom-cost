@@ -38,13 +38,9 @@ node tools/install.mjs web              # 指定别的 profile（默认 desktop�
 
 **装完需要重启 DeepSeek Harness。** 宿主半区是 Node 模块，只重载配置不会导入它。之后改 `lib/client.js` 只需刷新页面；改 `lib/index.js` 仍需重启。
 
-用**复制**而不是目录联结是有原因的：Windows 上联结会被 Node realpath 回克隆目录，插件的 `zod` 导入就会从克隆目录往上找——那里没有 `node_modules`，插件在装载阶段就会失败。
+用**复制**而不是目录联结是刻意的：联结会被 Node realpath 回克隆目录，于是**将来任何对三方包的裸导入**都会从克隆目录往上找（那里没有 `node_modules`）而在装载阶段失败——0.2.0 里那个短命的 `zod` 导入就是这么炸的。0.2.1 起本插件不再有裸三方导入，所以今天用联结也能跑；保留复制是为了与这里其它插件的约定一致，并且不会再以这种方式坏掉。
 
-手动复制安装**不会带上依赖**：宿主半区需要 `zod` 做投影 schema。走插件市场 / npm 安装时依赖会一起装上；手动安装时若 profile 里没有 zod，`tools/install.mjs` 会明确提示（缺了它插件在装载阶段就会失败），按提示补一次即可：
-
-```sh
-cd <你的 profile 目录> && pnpm add zod
-```
+手动复制安装是**完整的安装**：本插件**零运行时依赖**——形状校验用自带的 `lib/shape.js`（约 90 行），所以没有额外的包要装，也不需要联网。
 
 ## 怎么读这个界面
 
@@ -114,6 +110,14 @@ cd <你的 profile 目录> && pnpm add zod
 - 三条价目路由都是**仅回环 + 同源**校验（与本工作区既有 DSH 插件同一套围栏）。
 - 宿主半区不读凭据、不写会话数据、不装定时器。
 
+### 为什么形状校验是手写的
+
+DSH 的投影注册表向每个单元索取 `stateSchema` 与 `wire.viewSchema`，并且**只对它们调用 `.parse`**（`@deepseek-ai/dsh-session-projection` 里共 6 处；没有 `safeParse`、没有 `optional`、没有 `refine`）。这个契约是鸭子类型的，所以 `lib/shape.js` 只用约 90 行、零依赖地实现了本插件真正需要的七个谓词：object / string / 有限数字 / boolean / array / 枚举 / nullable。
+
+另一条路是 `zod`（DSH 自己的 `dsh-token-meter` 就用它）。那条路不算错，但对本插件不划算：发布的包有 **840 个文件 / 5.86 MB**（哪怕只留 v4 ESM 运行时也有 111 个文件 / 886 KB），而本 README 首推的安装路径是**复制式安装、不带依赖**——要带上 zod 就只能往仓库里塞一大块第三方代码，或者让安装脚本联网跑 `pnpm` 去改写你 profile 的 `package.json`。手写让这条路径真正自足。
+
+一处**刻意比 zod 更严**：`NaN` 与 `Infinity` 一律拒绝——它们一旦混进 token 或金额会静默污染累计值。另外，因为校验器是本仓库自己的代码，自测可以**直接测它**（zod 作为三方导入做不到这一点）。
+
 ## 实现要点
 
 ### 用官方扩展点，不做 DOM 注入
@@ -137,7 +141,7 @@ cd <你的 profile 目录> && pnpm add zod
 | `lib/fold.js` | 纯折叠：会话事件 → 按轮 token 事实。零依赖。 |
 | `lib/pricing.js` | 纯计价：峰谷时钟、模型→价目行判定、tokens→金额。零依赖。 |
 | `lib/pricebook.js` | 纯价目书：内置表、严格校验、官方页解析器。零依赖。 |
-| `lib/projection.js` | 薄适配：zod schema + 客户端视图。 |
+| `lib/projection.js` | 薄适配：形状 schema + 客户端视图。 |
 | `lib/pricebook-store.js` | 抓取、暂存候选、采用、落盘。 |
 | `lib/routes.js`、`lib/guard.js` | 仅回环的 HTTP 翻译层。 |
 | `lib/client.js` | 胶囊与面板；按「事实 × 当前价目书」算钱。 |
@@ -152,13 +156,15 @@ npm run test:schema   # node tools/schema-check.mjs —— schema ↔ 状态 ↔
 
 `selftest` 覆盖峰谷与节假日例外、解析器（对着随仓库附带的官方页快照）、价目书校验、换一本价目书重算、按桶聚合、重放幂等、状态 JSON 安全、明细裁剪、以及客户端文案键集合。
 
-`test:schema` 的存在有具体原因：`selftest` 刻意不做三方依赖导入（必须能在没有 `node_modules` 的环境跑），因此**看不见 zod schema**——而 `viewOf()` 与视图 schema 一旦不一致，每次投影读写都会在运行时抛错，这条缝真的挂过一次。现在它有专门的守卫。
+`selftest` 覆盖峰谷与节假日例外、解析器（对着随仓库附带的官方页快照）、价目书校验、换一本价目书重算、按桶聚合、重放幂等、状态 JSON 安全、明细裁剪、客户端文案键集合，以及——因为校验器现在是本仓库自己的代码——**投影 schema 本身**（未声明字段被丢弃、类型不符按路径报错、`NaN` 被拒）。
+
+`test:schema` 是另一种检查：它导入**profile 里实际装着的那份副本**，把 状态 → 视图 → schema 整条走一遍，因此同时验证「装上的文件能加载」与「`viewOf()` 与视图 schema 仍逐字段一致」。后者在开发中真的挂过一次，现在有专门的守卫。
 
 ## 兼容性
 
 - DSH **≥ 0.2.0-rc.2**（开发与验证均在 0.2.0-rc.2 上完成）。
 - Node **≥ 20**。
-- 一个运行时依赖：`zod` ^4，用于投影 schema。
+- **零运行时依赖**：投影 schema 由插件自带的 `lib/shape.js` 校验。
 
 ## 许可
 
@@ -173,7 +179,7 @@ npm run test:schema   # node tools/schema-check.mjs —— schema ↔ 状态 ↔
 
 上面两处只是**署名**：规则与数据是**抄进本插件源码的**，本插件**不 `import` dsh-usage，也不 `import` 任何 `@linxin666/*` 包**。把 dsh-usage 卸载掉、或它升级/改名，本插件照常工作——反过来说，官方调价时这两份**副本**要各自更新（这就是「同口径」想表达的意思）。
 
-唯一的运行时三方依赖是 **`zod` ^4**（用于投影 schema）。走插件市场 / npm 安装时它会随依赖一起装上；手动复制安装见「安装」一节的说明。
+**零运行时依赖。** 没有要顺带安装的东西，也没有要跟进同步的东西：投影 schema 来自插件自带的 `lib/shape.js`（理由见上文「为什么形状校验是手写的」）。
 
 ## 相关
 

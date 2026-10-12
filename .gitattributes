@@ -1,0 +1,8 @@
+# 所有文本文件一律 LF，避免 Windows 提交把 js/md 存成 CRLF 后在 diff 里整片变动。
+* text=auto eol=lf
+
+# 二进制/资源不要做行尾转换。
+*.png binary
+*.webp binary
+*.jpg binary
+*.ico binary

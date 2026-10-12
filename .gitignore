@@ -1,0 +1,15 @@
+# 依赖（本插件只有一个三方依赖 zod，且由 profile 的 node_modules 提供；
+# 这个目录只会在本地开发时出现）
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 本地跑出来的东西
+*.log
+.tmp/

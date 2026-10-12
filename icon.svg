@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="dsh-session-cost">
+  <!-- 与插件面板里那颗胶囊同一枚钱币字形：圆 + ￥ -->
+  <rect width="64" height="64" rx="14" fill="#4d6bfe"/>
+  <g fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="32" cy="32" r="17"/>
+    <path d="M37.8 25.5 32 33.2 26.2 25.5"/>
+    <path d="M32 33.2V41"/>
+    <path d="M26.2 35.6h11.6"/>
+  </g>
+</svg>

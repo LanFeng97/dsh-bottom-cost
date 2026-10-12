@@ -2,46 +2,73 @@
 
 [English](README.md) | [中文](README.zh.md)
 
-A **session cost** chip for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): it sits in the same row as the built-in stats pills under the composer and answers two questions at a glance — *what has this conversation cost*, and *what did the last turn cost* — with a per-turn breakdown of cache-hit versus cache-miss spend.
+A **session cost** chip for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness): it sits in the same row as the built-in stats pills under the composer and answers "what has this conversation cost" and "what did the last turn cost" at a glance, splitting the spend into **cache-hit** and **cache-miss** parts.
 
-```
-     12 turns · 84 tok/s      Token 24.1K · 缓存命中 96%      ◎ ¥3.42 · ¥0.19
-                                                              ↑ dsh-session-cost
-```
+![The session cost chip and its expanded panel](docs/session-cost-panel.png)
 
-Click it and the panel opens **upwards** — the same anchor geometry, gap and viewport clamping as the two built-in stats dialogs:
+## Install
 
-```
-        ┌──────────────────────────────────────────┐
-        │ ◎ 本对话费用                     [ 刷新 ] │
-        │ 价目：官方页 · 10/13 02:06                │
-        │ ─────────────────────────────────────────│
-        │ 命中缓存                          ¥1.195 │
-        │ 未命中                            ¥1.084 │
-        │ ─────────────────────────────────────────│
-        │ 第 5 轮                           ¥0.0710│
-        │   命中缓存                        ¥0.0509│
-        │   未命中                          ¥0.0201│
-        │ 第 6 轮                           ¥0.1949│
-        │   命中缓存                        ¥0.1490│
-        │   未命中                          ¥0.0459│
-        └──────────────────────────────────────────┘
-              ↑ the scrolling window is exactly two turn blocks tall
+### Option 1 — let your AI install it (recommended)
+
+Paste this whole block into any AI that can read and write your machine (an agent inside DSH, Claude Code, Codex — anything):
+
+```text
+Install the DSH plugin at https://github.com/LanFeng97/dsh-session-cost into my DeepSeek Harness:
+clone the repo, run `node tools/install.mjs`, and tell me when I need to restart DSH.
 ```
 
-## What it does
+### Option 2 — from the plugin market (once listed)
 
-| You do | You get |
-| --- | --- |
-| Glance at the chip | This conversation's total spend, then the latest turn's spend |
-| Click the chip | The panel opens upward, pinned above the composer |
-| Look at the fixed header | **Cache-hit spend** and **cache-miss spend** for the whole conversation |
-| Scroll the list | Every turn's total / hit / miss, starting at the newest turn |
-| Review a long conversation | Scroll up to walk back through earlier turns |
-| Click **刷新** | Fetches the official price page, shows what changed, and applies it only after you confirm |
-| Have no billable turn yet | The chip stays hidden, exactly like the built-in stats pills |
+DSH plugins are distributed as packages; look for **dsh-session-cost** in [dshmarket](https://github.com/dsh-market/dsh-market). Until it is listed, use option 1 or 3.
 
-Three rows per turn: **total / cache-hit / miss**. The two numbers in the fixed header always add up to the total on the chip — the identity `total = hit + miss` holds by construction, not by rounding luck.
+### Option 3 — manual install
+
+```sh
+git clone https://github.com/LanFeng97/dsh-session-cost
+cd dsh-session-cost
+node tools/install.mjs
+```
+
+That copies the package into your DSH profile's `node_modules` and appends one loader line to the profile's `cordis.patch.yml`. It resolves your DSH home the same way the harness does — `$DSH_HOME`, then `~/.dsh` — and it is idempotent: re-run it after pulling to sync an update.
+
+```sh
+node tools/install.mjs --dry-run        # print what it would do, write nothing
+node tools/install.mjs web              # target another profile (default: desktop)
+```
+
+**Then restart DeepSeek Harness.** The host half is a Node module, so a config reload alone will not import it. After that, changing `lib/client.js` only needs a page refresh; changing `lib/index.js` still needs a restart.
+
+Installing by **copy** rather than a directory junction is intentional: on Windows a junction is realpath-resolved back into the clone, and the plugin's `zod` import would then resolve from the clone directory, where there is no `node_modules` — the plugin would fail at load time.
+
+## How to read the UI
+
+In the screenshot: the panel is the expanded part, and the strip at the very bottom is the **stats row under the composer** (the chip lives in the same row as the built-in session-stats and token-usage pills).
+
+**The chip in the stats row**
+
+```
+◎ ¥2.922 · ¥0.4877
+  ↑ left                ↑ right
+this conversation's     the latest turn's
+total spend             spend
+```
+
+- The **left** number is what this conversation has cost so far; the **right** number is what the most recent turn cost. Both update live as the conversation goes on.
+- With nothing billable yet, the chip is hidden — the same "no content, no render" behaviour as the built-in stats pills.
+
+**Click the chip and the panel opens upward**
+
+- **Fixed header**: the conversation's total spend, split into **cache-hit** and **cache-miss** (`¥1.609` and `¥1.313` in the screenshot). Those two always add up to the total on the chip — the identity `total = hit + miss` holds by construction, not by rounding luck.
+- **Scrolling list**: **every turn's** spend, three rows each — **total / cache-hit / cache-miss** (turns 7 and 8 in the screenshot). It starts at the newest turn; **scroll up** to walk back through earlier ones.
+- **The scrolling window is exactly two turn blocks tall** — you came here to see this turn and the previous one, and the panel does not have to grow tall for that.
+
+**The 刷新 (Refresh) button, top right**
+
+It is about the **price list used for pricing**, not about re-counting your conversation. Clicking it makes the host fetch the **official Chinese price page**, parse its 12 unit prices and validate every one, then **show you the diff first** (which line changed, from what to what) — nothing is applied until you click **采用 (Apply)**. That extra step exists because DeepSeek publishes **no machine-readable price API**, only a human-facing docs page, so parsing it can fail; a bad parse applied silently would corrupt every number you look at.
+
+The panel's second line — `价目：官方页 · 10/13 02:17` — tells you **which price list is active and when it was fetched**. If it says `价目：内置表`, no fetch has happened yet and the built-in table shipped with the plugin is in use.
+
+**Do you need to click it often?** No. Once when the official prices change. After you apply, **the whole conversation is instantly re-priced** (money is computed in the browser from the active price list; history stores only token facts), so you never end up with two generations of prices mixed into one ledger.
 
 ## Where the numbers come from
 
@@ -67,19 +94,13 @@ The price rules carry a time fence (inherited from [`@linxin666/dsh-usage`](http
 
 The official price page still lists `deepseek-v4-pro` on **its own, 3–7.5× more expensive row** (miss 4.5/9.0, output 13.5/27.0). The documentation cannot prove which tier the runtime actually charges. Rather than guess, the plugin keeps the fence and **marks the affected turns** with `按Flash档估`, plus a summary line in the panel. To price them at the official pro row instead, set `V4_PRO_FOLDED_INTO_FLASH_AT_MS` in `lib/pricing.js` to `0`.
 
-## Refresh the price list
-
-Click **刷新** in the panel:
+## The full price-refresh flow
 
 1. The host fetches the **official Chinese price page** (`api-docs.deepseek.com/zh-cn/quick_start/pricing`, which quotes CNY; the English page quotes USD and is not used).
 2. It parses the table and validates all 12 unit prices — if any single one is missing or implausible, the whole parse is rejected.
-3. It shows you **the diff** (which line changed, from what to what). Only **采用** applies it.
+3. It shows you **the diff**; **采用 (Apply)** commits it, **放弃 (Discard)** throws it away.
 
-That extra confirmation step is deliberate: DeepSeek publishes **no machine-readable price API**, only a human-facing docs page, so parsing it is inherently fragile. A bad parse applied silently would corrupt every number you look at.
-
-**Where the money is computed** deserves its own sentence: the projection state stores only *token facts* — which model, which price row, peak or off-peak, how many tokens — and **the browser computes the money from the currently active price book**. So adopting a new price list re-prices the entire conversation instantly, with no history rewritten and no two generations of prices mixed into one ledger. The price book is never stored in session checkpoints; it lives in `<DSH_HOME>/dsh-session-cost/pricebook.json` (atomic write).
-
-A failed fetch (offline, timeout, redesigned page) is reported and **keeps the current prices**; the built-in table remains the first-run fallback.
+The price list is stored in `<DSH_HOME>/dsh-session-cost/pricebook.json` (atomic write) and survives restarts. A failed fetch (offline, timeout, redesigned page) is reported and **keeps the current prices**; the built-in table remains the first-run fallback.
 
 ### Capability boundary
 
@@ -87,31 +108,6 @@ A failed fetch (offline, timeout, redesigned page) is reported and **keeps the c
 - **One file written**: `<DSH_HOME>/dsh-session-cost/pricebook.json`.
 - The three price routes are **loopback + same-origin fenced** (the same guard sibling DSH plugins use).
 - The host half reads no credentials, writes no session data, and runs no timers.
-
-## Install
-
-### From the plugin market (once listed)
-
-DSH plugins are distributed as packages; look for **dsh-session-cost** in [dshmarket](https://github.com/dsh-market/dsh-market). Until it is listed, use the manual route below.
-
-### Manual install from this repository
-
-```sh
-git clone https://github.com/LanFeng97/dsh-session-cost
-cd dsh-session-cost
-node tools/install.mjs
-```
-
-That copies the package into your DSH profile's `node_modules` and appends one loader line to the profile's `cordis.patch.yml`. It resolves your DSH home the same way the harness does — `$DSH_HOME`, then `~/.dsh` — and it is idempotent: re-run it after pulling to sync an update.
-
-**Then restart DeepSeek Harness.** The host half is a Node module, so a config reload alone will not import it. After that, changing `lib/client.js` only needs a page refresh; changing `lib/index.js` still needs a restart.
-
-```sh
-node tools/install.mjs --dry-run        # print what it would do, write nothing
-node tools/install.mjs web              # target another profile (default: desktop)
-```
-
-Installing by **copy** rather than a directory junction is intentional: on Windows a junction is realpath-resolved back into the clone, and the plugin's `zod` import would then resolve from the clone directory, where there is no `node_modules` — the plugin would fail at load time.
 
 ## How it works
 

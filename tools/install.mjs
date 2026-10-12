@@ -17,6 +17,7 @@
  */
 
 import fs from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
 
@@ -75,7 +76,8 @@ if (linkStat?.isSymbolicLink()) {
   console.log(`已摘除旧的目录联结：${targetDir}`)
 }
 
-fs.mkdirSync(path.dirname(targetDir), { recursive: true })
+// 只在真正要写的时候建目录：--dry-run 承诺"不写任何文件"，mkdir 也算写。
+if (!dryRun) fs.mkdirSync(path.dirname(targetDir), { recursive: true })
 for (const entry of COPY_ENTRIES) {
   const from = path.join(pluginDir, entry)
   if (!fs.existsSync(from)) continue
@@ -87,7 +89,7 @@ for (const entry of COPY_ENTRIES) {
   fs.rmSync(to, { recursive: true, force: true })
   copyRecursive(from, to)
 }
-console.log(`已同步文件到：${targetDir}`)
+console.log(dryRun ? `将同步文件到：${targetDir}` : `已同步文件到：${targetDir}`)
 
 // ---- 2. profile patch -----------------------------------------------------
 
@@ -107,6 +109,27 @@ if (patch.includes(PACKAGE_NAME)) {
   ].join('\n')
   fs.writeFileSync(patchPath, patch.replace(/\s*$/, '') + '\n' + block)
   console.log(`已在 patch 追加 loader 行：${patchPath}`)
+}
+
+// ---- 3. 依赖检查 ----------------------------------------------------------
+
+// 宿主半区裸导入 `zod`（投影 schema）。**复制安装不会带依赖**，而缺了它插件会在装载
+// 阶段直接失败——界面上什么都看不到，用户完全无从判断。所以这里主动探一次，
+// 缺了就给出可执行的补装命令。（走插件市场 / npm 安装时依赖会一起装上，不会触发。）
+const zodProbe = createRequire(path.join(profileDir, 'index.js'))
+try {
+  zodProbe.resolve('zod')
+  console.log('依赖检查：profile 里能解析到 zod ✓')
+} catch {
+  console.warn([
+    '',
+    '⚠ 这个 profile 里解析不到 zod —— 本插件的宿主半区 import 它做投影 schema，',
+    '  缺了它插件会在装载阶段失败（界面上不会出现任何东西）。复制安装不会带依赖。',
+    '  在 profile 目录补装一次即可：',
+    `    cd "${profileDir}"`,
+    '    pnpm add zod      # 或用 npm i zod；DSH 自带 pnpm 在 <DSH 安装目录>/resources/runtime/pnpm',
+    '  （用插件市场 / npm 安装本插件则无需这一步：依赖会随之装上。）',
+  ].join('\n'))
 }
 
 console.log(dryRun ? '\n（dry-run，未改动任何文件）' : '\n完成。宿主半区需要重启 DSH 生效；浏览器半区刷新页面即可。')

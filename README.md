@@ -40,6 +40,12 @@ node tools/install.mjs web              # target another profile (default: deskt
 
 Installing by **copy** rather than a directory junction is intentional: on Windows a junction is realpath-resolved back into the clone, and the plugin's `zod` import would then resolve from the clone directory, where there is no `node_modules` — the plugin would fail at load time.
 
+A manual copy install **does not bring dependencies**: the host half needs `zod` for the projection schemas. A market / npm install brings it along; if your profile has no `zod` when installing manually, `tools/install.mjs` says so explicitly (without it the plugin fails at load time) — add it once, as the message tells you:
+
+```sh
+cd <your profile directory> && pnpm add zod
+```
+
 ## How to read the UI
 
 In the screenshot: the panel is the expanded part, and the strip at the very bottom is the **stats row under the composer** (the chip lives in the same row as the built-in session-stats and token-usage pills).
@@ -90,7 +96,7 @@ Prices are estimated from token counts and the published tariff. The plugin neve
 
 ### The `deepseek-v4-pro` tier is disputed
 
-The price rules carry a time fence (inherited from [`@linxin666/dsh-usage`](https://github.com/zhu1090093659/dsh-web)): **after 2026-09-14 12:00 Beijing, `deepseek-v4-pro` requests are billed at the Flash row.**
+The price rules carry a time fence — a rule **copied into this plugin's source** in the same spirit as [`@linxin666/dsh-usage`](https://github.com/zhu1090093659/dsh-web) (a provenance note, not a runtime dependency — see "No runtime coupling" below): **after 2026-09-14 12:00 Beijing, `deepseek-v4-pro` requests are billed at the Flash row.**
 
 The official price page still lists `deepseek-v4-pro` on **its own, 3–7.5× more expensive row** (miss 4.5/9.0, output 13.5/27.0). The documentation cannot prove which tier the runtime actually charges. Rather than guess, the plugin keeps the fence and **marks the affected turns** with `按Flash档估`, plus a summary line in the panel. To price them at the official pro row instead, set `V4_PRO_FOLDED_INTO_FLASH_AT_MS` in `lib/pricing.js` to `0`.
 
@@ -163,6 +169,12 @@ Two pieces are not original to this plugin and keep their upstream credit:
 
 - `lib/holidays.js` — Chinese public-holiday dates from [bastengao/chinese-holidays-node](https://github.com/bastengao/chinese-holidays-node) (MIT).
 - The peak/off-peak rules and the price-row decision in `lib/pricing.js`, plus the built-in table in `lib/pricebook.js` — same tariff interpretation as [@linxin666/dsh-usage](https://github.com/zhu1090093659/dsh-web) (Apache-2.0).
+
+### No runtime coupling
+
+Both bullets above are **credits only**: the rules and data were **copied into this plugin's source**. This plugin does **not `import` dsh-usage, and does not import any `@linxin666/*` package**. Uninstall dsh-usage, upgrade it, rename it — this plugin keeps working. The flip side: when the official prices change, the two **copies** each need updating (that is what "same tariff interpretation" is warning about).
+
+The only third-party runtime dependency is **`zod` ^4**, used for the projection schemas. A market / npm install brings it along; for the manual copy install, see the note in **Install** above.
 
 ## Related
 

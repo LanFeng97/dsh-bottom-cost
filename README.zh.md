@@ -40,6 +40,12 @@ node tools/install.mjs web              # 指定别的 profile（默认 desktop�
 
 用**复制**而不是目录联结是有原因的：Windows 上联结会被 Node realpath 回克隆目录，插件的 `zod` 导入就会从克隆目录往上找——那里没有 `node_modules`，插件在装载阶段就会失败。
 
+手动复制安装**不会带上依赖**：宿主半区需要 `zod` 做投影 schema。走插件市场 / npm 安装时依赖会一起装上；手动安装时若 profile 里没有 zod，`tools/install.mjs` 会明确提示（缺了它插件在装载阶段就会失败），按提示补一次即可：
+
+```sh
+cd <你的 profile 目录> && pnpm add zod
+```
+
 ## 怎么读这个界面
 
 看截图：上面是**展开后的面板**，最底下那条是**输入框下方的统计栏**（它和内置的会话统计、Token 用量胶囊排在同一行）。
@@ -89,7 +95,7 @@ node tools/install.mjs web              # 指定别的 profile（默认 desktop�
 
 ### `deepseek-v4-pro` 的档位存在争议
 
-价目规则里有一条时间栅栏（继承自 [`@linxin666/dsh-usage`](https://github.com/zhu1090093659/dsh-web)）：**2026-09-14 12:00（北京）之后，`deepseek-v4-pro` 的请求按 Flash 档计价。**
+价目规则里有一条时间栅栏——它是照着 [`@linxin666/dsh-usage`](https://github.com/zhu1090093659/dsh-web) 的口径**抄进本插件源码的一段规则**（不是运行时依赖，见文末「零运行时耦合」）：**2026-09-14 12:00（北京）之后，`deepseek-v4-pro` 的请求按 Flash 档计价。**
 
 而官方价目页至今仍把 `deepseek-v4-pro` 列在**它自己那一行、贵 3〜7.5 倍**（未命中 4.5/9.0，输出 13.5/27.0）。文档无法证明运行时到底按哪档扣费。与其猜，插件保留栅栏并把受影响的轮次标上 `按Flash档估`，同时在面板里给汇总提醒。要改成按官方 pro 档算，把 `lib/pricing.js` 里的 `V4_PRO_FOLDED_INTO_FLASH_AT_MS` 置为 `0` 即可。
 
@@ -162,6 +168,12 @@ npm run test:schema   # node tools/schema-check.mjs —— schema ↔ 状态 ↔
 
 - `lib/holidays.js` —— 中国法定节假日日期，来自 [bastengao/chinese-holidays-node](https://github.com/bastengao/chinese-holidays-node)（MIT）。
 - `lib/pricing.js` 的峰谷规则与价目行判定、`lib/pricebook.js` 的内置表 —— 与 [@linxin666/dsh-usage](https://github.com/zhu1090093659/dsh-web)（Apache-2.0）同一套口径。
+
+### 零运行时耦合
+
+上面两处只是**署名**：规则与数据是**抄进本插件源码的**，本插件**不 `import` dsh-usage，也不 `import` 任何 `@linxin666/*` 包**。把 dsh-usage 卸载掉、或它升级/改名，本插件照常工作——反过来说，官方调价时这两份**副本**要各自更新（这就是「同口径」想表达的意思）。
+
+唯一的运行时三方依赖是 **`zod` ^4**（用于投影 schema）。走插件市场 / npm 安装时它会随依赖一起装上；手动复制安装见「安装」一节的说明。
 
 ## 相关
 

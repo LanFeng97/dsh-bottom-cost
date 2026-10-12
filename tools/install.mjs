@@ -2,7 +2,7 @@
  * 安装/更新本插件到某个 DSH profile。
  *
  * 做两件事，都是幂等的：
- * 1. 把本包**复制**进 `<profile>/node_modules/dsh-session-cost`；
+ * 1. 把本包**复制**进 `<profile>/node_modules/dsh-bottom-cost`；
  * 2. 在 `<profile>/cordis.patch.yml` 里补上本插件的 loader 行（已存在就跳过）。
  *
  * 为什么是复制而不是目录联结：Windows 上联结会被 Node realpath 回本仓库路径，于是**将来任何
@@ -21,7 +21,7 @@ import path from 'node:path'
 import process from 'node:process'
 
 const ENTRY_ID = 'ui-session-cost'
-const PACKAGE_NAME = 'dsh-session-cost'
+const PACKAGE_NAME = 'dsh-bottom-cost'
 /** DSH 家目录：与 dsh-home-paths 的默认约定一致，可用 DSH_HOME 覆盖。 */
 const DSH_HOME = process.env.DSH_HOME ?? path.join(process.env.USERPROFILE ?? '', '.dsh')
 /** 要同步进 profile 的顶层条目（package.json 的 files 字段同源）。 */

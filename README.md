@@ -1,4 +1,4 @@
-# dsh-session-cost
+# dsh-bottom-cost
 
 [English](README.md) | [中文](README.zh.md)
 
@@ -13,19 +13,19 @@ A **session cost** chip for [DeepSeek Harness](https://github.com/deepseek-ai/de
 Paste this whole block into any AI that can read and write your machine (an agent inside DSH, Claude Code, Codex — anything):
 
 ```text
-Install the DSH plugin at https://github.com/LanFeng97/dsh-session-cost into my DeepSeek Harness:
+Install the DSH plugin at https://github.com/LanFeng97/dsh-bottom-cost into my DeepSeek Harness:
 clone the repo, run `node tools/install.mjs`, and tell me when I need to restart DSH.
 ```
 
 ### Option 2 — from the plugin market (once listed)
 
-DSH plugins are distributed as packages; look for **dsh-session-cost** in [dshmarket](https://github.com/dsh-market/dsh-market). Until it is listed, use option 1 or 3.
+DSH plugins are distributed as packages; look for **dsh-bottom-cost** in [dshmarket](https://github.com/dsh-market/dsh-market). Until it is listed, use option 1 or 3.
 
 ### Option 3 — manual install
 
 ```sh
-git clone https://github.com/LanFeng97/dsh-session-cost
-cd dsh-session-cost
+git clone https://github.com/LanFeng97/dsh-bottom-cost
+cd dsh-bottom-cost
 node tools/install.mjs
 ```
 
@@ -102,12 +102,12 @@ The official price page still lists `deepseek-v4-pro` on **its own, 3–7.5× mo
 2. It parses the table and validates all 12 unit prices — if any single one is missing or implausible, the whole parse is rejected.
 3. It shows you **the diff**; **采用 (Apply)** commits it, **放弃 (Discard)** throws it away.
 
-The price list is stored in `<DSH_HOME>/dsh-session-cost/pricebook.json` (atomic write) and survives restarts. A failed fetch (offline, timeout, redesigned page) is reported and **keeps the current prices**; the built-in table remains the first-run fallback.
+The price list is stored in `<DSH_HOME>/dsh-bottom-cost/pricebook.json` (atomic write) and survives restarts. A failed fetch (offline, timeout, redesigned page) is reported and **keeps the current prices**; the built-in table remains the first-run fallback.
 
 ### Capability boundary
 
 - **One outbound request**, to the public docs page above, **only when you click 刷新**. Nothing else ever leaves the machine.
-- **One file written**: `<DSH_HOME>/dsh-session-cost/pricebook.json`.
+- **One file written**: `<DSH_HOME>/dsh-bottom-cost/pricebook.json`.
 - The three price routes are **loopback + same-origin fenced** (the same guard sibling DSH plugins use).
 - The host half reads no credentials, writes no session data, and runs no timers.
 

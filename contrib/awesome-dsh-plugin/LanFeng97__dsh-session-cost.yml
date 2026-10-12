@@ -1,6 +1,0 @@
-url: https://github.com/LanFeng97/dsh-session-cost
-name: LanFeng97/dsh-session-cost
-category: usage
-description:
-  en: 'Cost chip in the composer stats row: this conversation total and last-turn spend, an upward panel with cache-hit and cache-miss totals plus a per-turn breakdown, priced locally from a refreshable official price table.'
-  zh: '输入框下方统计栏里的费用胶囊：本对话累计与最近一轮花费，向上展开显示命中/未命中的总花费与逐轮明细；金额在本地按可刷新的官方价目表计算。'

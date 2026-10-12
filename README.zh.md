@@ -1,4 +1,4 @@
-# dsh-session-cost
+# dsh-bottom-cost
 
 [English](README.md) | [中文](README.zh.md)
 
@@ -13,19 +13,19 @@
 把下面这一整段复制给任意一个能读写你电脑的 AI（DSH 里的 agent、Claude Code、Codex 都行），它会自己完成克隆与安装：
 
 ```text
-帮我安装 https://github.com/LanFeng97/dsh-session-cost 这个插件到我的 DeepSeek Harness：
+帮我安装 https://github.com/LanFeng97/dsh-bottom-cost 这个插件到我的 DeepSeek Harness：
 克隆仓库，运行 node tools/install.mjs，装好后告诉我需要重启 DSH 才能生效。
 ```
 
 ### 方式二：从插件市场安装（上架后）
 
-DSH 插件以包的形式分发；在 [dshmarket](https://github.com/dsh-market/dsh-market) 里搜索 **dsh-session-cost**。上架之前请用方式一或方式三。
+DSH 插件以包的形式分发；在 [dshmarket](https://github.com/dsh-market/dsh-market) 里搜索 **dsh-bottom-cost**。上架之前请用方式一或方式三。
 
 ### 方式三：手动安装
 
 ```sh
-git clone https://github.com/LanFeng97/dsh-session-cost
-cd dsh-session-cost
+git clone https://github.com/LanFeng97/dsh-bottom-cost
+cd dsh-bottom-cost
 node tools/install.mjs
 ```
 
@@ -101,12 +101,12 @@ node tools/install.mjs web              # 指定别的 profile（默认 desktop�
 2. 解析那张表并校验全部 12 个单价——任何一个缺失或不合理，整份解析直接作废；
 3. **把差异列给你看**，点 **采用** 才生效，也可以 **放弃**。
 
-价目表只存在 `<DSH_HOME>/dsh-session-cost/pricebook.json`（原子写），重启后仍然生效；抓取失败（断网、超时、官网改版）会明确报出来并**保留当前价目**；首次启动的兜底始终是内置表。
+价目表只存在 `<DSH_HOME>/dsh-bottom-cost/pricebook.json`（原子写），重启后仍然生效；抓取失败（断网、超时、官网改版）会明确报出来并**保留当前价目**；首次启动的兜底始终是内置表。
 
 ### 能力边界
 
 - **只有一次出网请求**：抓上面那个公开文档页，**且只在你点「刷新」时发生**。除此之外它不把任何东西发出去。
-- **只写一个文件**：`<DSH_HOME>/dsh-session-cost/pricebook.json`。
+- **只写一个文件**：`<DSH_HOME>/dsh-bottom-cost/pricebook.json`。
 - 三条价目路由都是**仅回环 + 同源**校验（与本工作区既有 DSH 插件同一套围栏）。
 - 宿主半区不读凭据、不写会话数据、不装定时器。
 

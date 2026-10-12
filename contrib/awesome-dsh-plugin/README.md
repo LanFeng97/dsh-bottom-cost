@@ -30,12 +30,12 @@
 ```sh
 gh repo fork awesome-dsh-plugin/awesome-dsh-plugin --clone
 cd awesome-dsh-plugin
-cp <本目录>/LanFeng97__dsh-session-cost.yml data/plugins/
-git checkout -b add-dsh-session-cost
-git add data/plugins/LanFeng97__dsh-session-cost.yml
-git commit -m "Add dsh-session-cost"
-git push -u origin add-dsh-session-cost
-gh pr create --title "Add dsh-session-cost" --body "Cost chip for the DSH composer stats row."
+cp <本目录>/LanFeng97__dsh-bottom-cost.yml data/plugins/
+git checkout -b add-dsh-bottom-cost
+git add data/plugins/LanFeng97__dsh-bottom-cost.yml
+git commit -m "Add dsh-bottom-cost"
+git push -u origin add-dsh-bottom-cost
+gh pr create --title "Add dsh-bottom-cost" --body "Cost chip for the DSH composer stats row."
 ```
 
 **只加一个文件**：清单的两个 README 由 `data/plugins/*.yml` 生成，手工编辑会被 CI 拦；
@@ -57,15 +57,15 @@ gh api repos/LanFeng97/awesome-dsh-plugin/git/ref/heads/main --jq '.object.sha'
 # 2) 建分支（**必须先建**：Contents API 不会自动建分支，直接 PUT 会报
 #    "Branch ... not found"——这一条是实测踩出来的）
 #    POST /repos/LanFeng97/awesome-dsh-plugin/git/refs
-#    body: { "ref": "refs/heads/add-dsh-session-cost", "sha": "<上一步的 sha>" }
+#    body: { "ref": "refs/heads/add-dsh-bottom-cost", "sha": "<上一步的 sha>" }
 
 # 3) 在分支上落文件（content 是 base64）
-#    PUT /repos/LanFeng97/awesome-dsh-plugin/contents/data/plugins/LanFeng97__dsh-session-cost.yml
-#    body: { "message": "Add dsh-session-cost", "content": "<base64>", "branch": "add-dsh-session-cost" }
+#    PUT /repos/LanFeng97/awesome-dsh-plugin/contents/data/plugins/LanFeng97__dsh-bottom-cost.yml
+#    body: { "message": "Add dsh-bottom-cost", "content": "<base64>", "branch": "add-dsh-bottom-cost" }
 
 # 4) 从 fork 的分支向上游 main 开 PR
 #    POST /repos/awesome-dsh-plugin/awesome-dsh-plugin/pulls
-#    body: { "title": "Add dsh-session-cost", "head": "LanFeng97:add-dsh-session-cost", "base": "main", "body": "..." }
+#    body: { "title": "Add dsh-bottom-cost", "head": "LanFeng97:add-dsh-bottom-cost", "base": "main", "body": "..." }
 ```
 
 `gh api --method <M> --input <payload.json> <path>` 可以把请求体放进文件，
@@ -77,4 +77,4 @@ CI 是前置条件、不是结论；维护者会实际读一遍仓库再合并�
 `plugins.json` 会在 `main` 上重新生成，市场上即可搜到。
 
 本插件的条目信息若日后需要更新（例如换了分类、改了描述），**只改自己那一条**：
-编辑 `data/plugins/LanFeng97__dsh-session-cost.yml` 再开一个 PR，不要手工动 README。
+编辑 `data/plugins/LanFeng97__dsh-bottom-cost.yml` 再开一个 PR，不要手工动 README。

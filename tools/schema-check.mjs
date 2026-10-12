@@ -17,7 +17,7 @@ import process from 'node:process'
 
 const profileName = process.argv[2] ?? 'desktop'
 const DSH_HOME = process.env.DSH_HOME ?? path.join(process.env.USERPROFILE ?? '', '.dsh')
-const installed = path.join(DSH_HOME, 'profiles', profileName, 'node_modules', 'dsh-session-cost')
+const installed = path.join(DSH_HOME, 'profiles', profileName, 'node_modules', 'dsh-bottom-cost')
 
 if (!existsSync(installed)) {
   console.error(`找不到已安装的副本：${installed}\n先跑：node tools/install.mjs ${profileName}`)
@@ -39,7 +39,7 @@ function check(name, ok) {
 }
 
 const main = await import(base + 'index.js')
-check(`主入口可加载（name=${main.name}, inject=${JSON.stringify(main.inject)}）`, main.name === 'dsh-session-cost' && typeof main.apply === 'function')
+check(`主入口可加载（name=${main.name}, inject=${JSON.stringify(main.inject)}）`, main.name === 'dsh-bottom-cost' && typeof main.apply === 'function')
 
 const fold = await import(base + 'fold.js')
 const { sessionCostProjection } = await import(base + 'projection.js')

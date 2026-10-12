@@ -2,4 +2,4 @@
 # 由 package.json 的 `dsh.bundle.patch` 声明，安装时作为 profile bundle 层生效。
 - insert:
     - id: ui-session-cost
-      name: 'dsh-session-cost'
+      name: 'dsh-bottom-cost'

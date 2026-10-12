@@ -19,7 +19,7 @@ import { createPriceBookStore } from '../lib/pricebook-store.js'
 
 const args = process.argv.slice(2)
 const homeArg = args.indexOf('--home')
-const home = homeArg === -1 ? path.join(tmpdir(), `dsh-session-cost-check-${process.pid}`) : args[homeArg + 1]
+const home = homeArg === -1 ? path.join(tmpdir(), `dsh-bottom-cost-check-${process.pid}`) : args[homeArg + 1]
 mkdirSync(home, { recursive: true })
 process.env.DSH_HOME = home
 
@@ -65,7 +65,7 @@ try {
   failed = true
 } finally {
   // 只删自己建的临时目录。
-  if (existsSync(home) && home.includes('dsh-session-cost-check-')) rmSync(home, { recursive: true, force: true })
+  if (existsSync(home) && home.includes('dsh-bottom-cost-check-')) rmSync(home, { recursive: true, force: true })
 }
 
 process.exit(failed ? 1 : 0)

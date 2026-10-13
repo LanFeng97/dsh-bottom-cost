@@ -38,7 +38,8 @@
     "test": "node tools/selftest.mjs",
     "test:live": "node tools/live-check.mjs",
     "test:schema": "node tools/schema-check.mjs",
-    "install:local": "node tools/install.mjs"
+    "install:local": "node tools/install.mjs",
+    "prepublishOnly": "node tools/selftest.mjs"
   },
   "dsh": {
     "engines": {

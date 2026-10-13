@@ -51,6 +51,8 @@ In the screenshot: the bottom line is the **stats row under the composer** — `
 
 Clicking a **Turn N** heading jumps the conversation to that turn: it read-only drives the built-in turn rail on the right, so a turn that is not loaded yet gets paged in by the app itself before landing. When it cannot locate the turn, the panel says so at the bottom instead of failing silently.
 
+The **sun (or moon)** at the right of the title row is a light/dark switch that applies **to this plugin's content only**: the panel flips to the other palette and the app's global theme is untouched. The icon shows the current mode (sun = light, moon = dark), and the colours come from the two official theme definitions — so each mode matches the rest of DSH while being the opposite of it.
+
 **The chip in the stats row**
 
 ```

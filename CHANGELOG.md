@@ -3,6 +3,15 @@
 本插件的所有显著变更。版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)；
 投影状态的形状变化会体现为 `stateVersion` 递增（旧检查点会自动作废并重放，不需要你手工清理）。
 
+## [0.5.0] - 2026-10-13
+
+### 新增
+
+- **每轮显示所用模型**（`v4-pro` / `v4-flash` …）：跟在轮次号右侧，正好用掉标签与金额之间空出来的那截宽度。
+  - 只削掉 `deepseek-` 前缀，不做别的改写；一轮里混用了多个模型就并列（`+`），太长交给标签的省略号。
+  - 悬停显示完整模型 id（`title`）。
+  - 数据本来就带 `model`（每个计价桶都有），这次只是把它显示出来——**没有改投影状态、schema 或 `stateVersion`**，旧检查点照样有效。
+
 ## [0.4.0] - 2026-10-13
 
 ### 新增
@@ -86,6 +95,7 @@
   每次调用按**发生时刻**的档位计费。
 - 非 DeepSeek 官方路由一律「未计价」并统计次数，不假装是 0 元。
 
+[0.5.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.0
 [0.4.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.4.0
 [0.3.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.3.0
 [0.2.1]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.2.1

@@ -1,6 +1,6 @@
 {
   "name": "dsh-bottom-cost",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Per-turn session cost chip in the composer stats row: each turn's spend, with the conversation total split into cache-hit and cache-miss (CNY), priced from an official price table that refreshes on demand. · 输入框下方统计栏里的会话费用胶囊：逐轮列出每轮花费，并把总额拆成缓存命中与未命中两笔（CNY）；价目表按需从官方定价页刷新。",
   "license": "MIT",
   "author": "LanFeng97",

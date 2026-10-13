@@ -51,7 +51,7 @@ In the screenshot: the bottom line is the **stats row under the composer** — `
 
 Clicking a **Turn N** heading jumps the conversation to that turn: it read-only drives the built-in turn rail on the right, so a turn that is not loaded yet gets paged in by the app itself before landing. When it cannot locate the turn, the panel says so at the bottom instead of failing silently.
 
-Each turn also shows **which model it used**, right of the turn number (`v4-pro`, `v4-flash`, …; only the `deepseek-` prefix is trimmed, a turn that mixed models lists them side by side, and hovering reveals the full ids). That is what lets a mark like `按Flash档估` line up with a concrete model.
+Each turn also shows **which model it used**, right of the turn number (`v4-pro`, `v4-flash`, …; only the `deepseek-` prefix is trimmed, a turn that mixed models lists them side by side, and hovering reveals the full ids).
 
 The **sun (or moon)** at the right of the title row is a light/dark switch that applies **to this plugin's content only**: both the panel and the cost chip in the stats row flip to the other palette, and the app's global theme is untouched. The icon shows the current mode (sun = light, moon = dark), and the colours come from the two official theme definitions — so each mode matches the rest of DSH while being the opposite of it. When the chip is on the opposite theme it gets its own themed background, since near-white text on the light stats row would otherwise be unreadable.
 
@@ -99,11 +99,13 @@ Scope is the **current conversation's own turns**. A subagent is a different ses
 
 Prices are estimated from token counts and the published tariff. The plugin never reads your balance, never touches credentials, and cannot see what DeepSeek actually deducted.
 
-### The `deepseek-v4-pro` tier is disputed
+### `deepseek-v4-pro` is priced on its own official row
 
-The price rules carry a time fence — a rule **copied into this plugin's source** in the same spirit as [`@linxin666/dsh-usage`](https://github.com/zhu1090093659/dsh-web) (a provenance note, not a runtime dependency — see "No runtime coupling" below): **after 2026-09-14 12:00 Beijing, `deepseek-v4-pro` requests are billed at the Flash row.**
+2026-09-14 was meant to retire Pro, serving its requests as V4.1-Flash instead; [`@linxin666/dsh-usage`](https://github.com/zhu1090093659/dsh-web) encoded that as a time fence, and this plugin copied it early on (that is where the old "the tier is disputed" section came from).
 
-The official price page still lists `deepseek-v4-pro` on **its own, 3–7.5× more expensive row** (miss 4.5/9.0, output 13.5/27.0). The documentation cannot prove which tier the runtime actually charges. Rather than guess, the plugin keeps the fence and **marks the affected turns** with `按Flash档估`, plus a summary line in the panel. To price them at the official pro row instead, set `V4_PRO_FOLDED_INTO_FLASH_AT_MS` in `lib/pricing.js` to `0`.
+**The provider then kept Pro available with billing unchanged** — Pro is charged strictly on its own official row, separate from Flash. So 0.5.1 **removed the fence**: a `deepseek-v4-pro` request is always priced on its own row (miss 4.5/9.0, output 13.5/27.0), and the `按Flash档估` mark plus its summary line are gone too, since their premise no longer holds.
+
+> If you run into the old "Pro is served by Flash" claim elsewhere, note that it describes the pre-2026-09-14 plan; do not reintroduce the fence.
 
 ## The full price-refresh flow
 

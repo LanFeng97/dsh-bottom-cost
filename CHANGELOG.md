@@ -3,6 +3,22 @@
 本插件的所有显著变更。版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)；
 投影状态的形状变化会体现为 `stateVersion` 递增（旧检查点会自动作废并重放，不需要你手工清理）。
 
+## [0.5.1] - 2026-10-13
+
+### 修复
+
+- **`deepseek-v4-pro` 改为恒按它自己的官方价目计价**，删掉了那条时间栅栏。
+  背景：2026-09-14 曾计划下线 Pro、把它的请求按 V4.1-Flash 承接并计费，`@linxin666/dsh-usage`
+  据此设了栅栏，本插件早期照抄；**官方随后决定继续提供 Pro、计费方式不变**（严格按自身价目，与 Flash 分开），
+  所以旧栅栏的前提已不成立。
+  - 影响：栅栏之后的 pro 轮次此前按 Flash 档估算（偏低 3〜7.5 倍），现在按官方 pro 行计算，金额会明显变大。
+  - 一并删除：`pricing.js` 的 `V4_PRO_FOLDED_INTO_FLASH_AT_MS` 与 `isDowngradedPro()`、
+    面板上的 `按Flash档估` 标记与那行汇总提醒（连同两条文案键）——它们只为栅栏而存在，栅栏没了就是死代码。
+  - `priceRowKeyFor(model)` 因此不再需要「调用时刻」这个参数。
+  - **`stateVersion` 2 → 3**：桶里的 `row` 是折叠时算好存下的，旧检查点里的 pro 桶仍是 `flash`，
+    不 +1 就会一直按旧规则显示。+1 让旧检查点作废并重放一次，**历史轮次也会按新规则重算**
+    （这正是这个机制存在的意义）；形状未变，只是规则变了。
+
 ## [0.5.0] - 2026-10-13
 
 ### 新增
@@ -95,6 +111,7 @@
   每次调用按**发生时刻**的档位计费。
 - 非 DeepSeek 官方路由一律「未计价」并统计次数，不假装是 0 元。
 
+[0.5.1]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.1
 [0.5.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.0
 [0.4.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.4.0
 [0.3.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.3.0

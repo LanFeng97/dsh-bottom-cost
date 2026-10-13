@@ -13,7 +13,7 @@
 
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { deepseekPeriodAt, isDeepSeekProviderRoute, isDowngradedPro, priceRowKeyFor, spendFor } from '../lib/pricing.js'
+import { deepseekPeriodAt, isDeepSeekProviderRoute, priceRowKeyFor, spendFor } from '../lib/pricing.js'
 import { BUILTIN_PRICE_BOOK, describePriceChanges, parseOfficialPricingPage, validatePriceBook } from '../lib/pricebook.js'
 import { MAX_RETAINED_TURNS, applyEvent, initState, viewOf } from '../lib/fold.js'
 import { sessionCostStateSchema, sessionCostViewSchema } from '../lib/projection.js'
@@ -77,11 +77,11 @@ check('周四但法定节假日（2026-10-01）10:00 北京＝空闲', deepseekP
 check('deepseek 家族可计价', isDeepSeekProviderRoute('deepseek') && isDeepSeekProviderRoute('deepseek-official') && isDeepSeekProviderRoute('deepseek-account'))
 check('非 DeepSeek 路由不可计价', !isDeepSeekProviderRoute('openrouter') && !isDeepSeekProviderRoute(''))
 
-// v4-pro 的价目行栅栏：2026-09-14 12:00 北京之前用 pro 行，之后被按下 flash 行。
-check('栅栏前 v4-pro 用 pro 行', priceRowKeyFor('deepseek-v4-pro', beijing('2026-09-14T08:00:00')) === 'pro')
-check('栅栏后 v4-pro 用 flash 行', priceRowKeyFor('deepseek-v4-pro', beijing('2026-09-14T13:00:00')) === 'flash')
-check('栅栏后的 v4-pro 需要标注', isDowngradedPro('deepseek-v4-pro', 'flash') === true)
-check('普通 flash 模型不需要标注', isDowngradedPro('deepseek-flash', 'flash') === false)
+// v4-pro 恒用自己那一行：官方继续提供 Pro 且计费不变（早期照 dsh-usage 抄来的
+// 时间栅栏已在 0.5.1 删除），所以这里断言「任何时刻都是 pro 行」。
+check('v4-pro 恒用 pro 行（含 2026-09-14 之后）', priceRowKeyFor('deepseek-v4-pro') === 'pro')
+check('v4-flash 用 flash 行', priceRowKeyFor('deepseek-v4-flash') === 'flash')
+check('未收录的模型 id 走 flash 行', priceRowKeyFor('deepseek-chat') === 'flash')
 
 // ---------------------------------------------------------------- 计价拆分
 

@@ -43,7 +43,7 @@ check(`主入口可加载（name=${main.name}, inject=${JSON.stringify(main.inje
 
 const fold = await import(base + 'fold.js')
 const { sessionCostProjection } = await import(base + 'projection.js')
-check(`投影单元形状（key=${sessionCostProjection.key}, stateVersion=${sessionCostProjection.stateVersion}）`, sessionCostProjection.key === 'sessionCost' && sessionCostProjection.stateVersion === 2)
+check(`投影单元形状（key=${sessionCostProjection.key}, stateVersion=${sessionCostProjection.stateVersion}）`, sessionCostProjection.key === 'sessionCost' && sessionCostProjection.stateVersion === 3)
 
 // 折一段覆盖各分支的事件：跨峰谷的一轮、进行中的一轮、以及不可计价的 provider。
 const off = Date.parse('2026-10-14T13:00:00+08:00')

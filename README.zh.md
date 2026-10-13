@@ -8,7 +8,15 @@
 
 ## 安装
 
-### 方式一：让你的 AI 帮你装（推荐）
+### 方式一：在 DSH 界面里装（最简单）
+
+1. 侧栏打开**插件 → 添加插件**；
+2. 粘贴仓库地址：`https://github.com/LanFeng97/dsh-bottom-cost`；
+3. 点**安装**，再按它的提示**重启 DeepSeek Harness**（关闭当前 `dsh` 进程后重新运行，例如 `dsh web`）。
+
+宿主半区是 Node 模块，**只重载配置不会被导入**，所以这一步重启不能省。重启后打开界面就能看到胶囊，不需要再刷新页面。
+
+### 方式二：让你的 AI 帮你装
 
 把下面这一整段复制给任意一个能读写你电脑的 AI（DSH 里的 agent、Claude Code、Codex 都行），它会自己完成克隆与安装：
 
@@ -17,30 +25,25 @@
 克隆仓库，运行 node tools/install.mjs，装好后告诉我需要重启 DSH 才能生效。
 ```
 
-### 方式二：从插件市场安装（上架后）
+### 方式三：从插件市场搜（上架后）
 
-DSH 插件以包的形式分发；在 [dshmarket](https://github.com/dsh-market/dsh-market) 里搜索 **dsh-bottom-cost**。上架之前请用方式一或方式三。
+DSH 插件以包的形式分发；在 [dshmarket](https://github.com/dsh-market/dsh-market) 里搜索 **dsh-bottom-cost**。上架之前请用方式一或方式二。
 
-### 方式三：手动安装
+### 方式四：从源码安装（开发者）
+
+要改代码、或要装到非默认 profile 时用这条：
 
 ```sh
 git clone https://github.com/LanFeng97/dsh-bottom-cost
 cd dsh-bottom-cost
-node tools/install.mjs
+node tools/install.mjs              # 复制进 profile 的 node_modules，并追加一行 loader 行
+node tools/install.mjs --dry-run    # 只打印要做什么，不写任何文件
+node tools/install.mjs web          # 指定别的 profile（默认 desktop）
 ```
 
-它会把包复制进你 DSH profile 的 `node_modules`，并在该 profile 的 `cordis.patch.yml` 追加一行 loader 行。DSH 家目录的解析方式与 harness 本身一致——先 `$DSH_HOME`，再 `~/.dsh`；脚本是幂等的，`git pull` 之后再跑一次即可同步更新。
+脚本是幂等的，`git pull` 之后再跑一次即可同步更新；它按 `$DSH_HOME`、`~/.dsh` 的顺序解析 DSH 家目录，与 harness 本身一致。装完同样**需要重启**。之后改 `lib/client.js` 只需刷新页面，改 `lib/index.js` 仍需重启。
 
-```sh
-node tools/install.mjs --dry-run        # 只打印要做什么，不写任何文件
-node tools/install.mjs web              # 指定别的 profile（默认 desktop）
-```
-
-**装完需要重启 DeepSeek Harness。** 宿主半区是 Node 模块，只重载配置不会导入它。之后改 `lib/client.js` 只需刷新页面；改 `lib/index.js` 仍需重启。
-
-用**复制**而不是目录联结是刻意的：联结会被 Node realpath 回克隆目录，于是**将来任何对三方包的裸导入**都会从克隆目录往上找（那里没有 `node_modules`）而在装载阶段失败——0.2.0 里那个短命的 `zod` 导入就是这么炸的。0.2.1 起本插件不再有裸三方导入，所以今天用联结也能跑；保留复制是为了与这里其它插件的约定一致，并且不会再以这种方式坏掉。
-
-手动复制安装是**完整的安装**：本插件**零运行时依赖**——形状校验用自带的 `lib/shape.js`（约 90 行），所以没有额外的包要装，也不需要联网。
+本插件**零运行时依赖**（形状校验用自带的 `lib/shape.js`，约 90 行），所以这条路径不需要联网装任何包。这里用**复制**而不是目录联结也是因此：联结会被 Node realpath 回克隆目录，万一将来引入裸三方导入，装载阶段就会在那里找不到它。
 
 ## 怎么读这个界面
 

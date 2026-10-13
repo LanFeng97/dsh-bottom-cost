@@ -8,7 +8,15 @@ A **session cost** chip for [DeepSeek Harness](https://github.com/deepseek-ai/de
 
 ## Install
 
-### Option 1 — let your AI install it (recommended)
+### Option 1 — install it from the DSH UI (simplest)
+
+1. Open **插件 → 添加插件** (Plugins → Add plugin) in the sidebar;
+2. Paste the repository URL: `https://github.com/LanFeng97/dsh-bottom-cost`;
+3. Click **安装** (Install), then **restart DeepSeek Harness** as its banner tells you to (close the running `dsh` process and start it again, e.g. `dsh web`).
+
+The host half is a Node module, so **a config reload alone will not import it** — that restart is not optional. Once restarted, open the UI and the chip is there; no page refresh needed.
+
+### Option 2 — let your AI install it
 
 Paste this whole block into any AI that can read and write your machine (an agent inside DSH, Claude Code, Codex — anything):
 
@@ -17,30 +25,25 @@ Install the DSH plugin at https://github.com/LanFeng97/dsh-bottom-cost into my D
 clone the repo, run `node tools/install.mjs`, and tell me when I need to restart DSH.
 ```
 
-### Option 2 — from the plugin market (once listed)
+### Option 3 — from the plugin market (once listed)
 
-DSH plugins are distributed as packages; look for **dsh-bottom-cost** in [dshmarket](https://github.com/dsh-market/dsh-market). Until it is listed, use option 1 or 3.
+DSH plugins are distributed as packages; look for **dsh-bottom-cost** in [dshmarket](https://github.com/dsh-market/dsh-market). Until it is listed, use option 1 or 2.
 
-### Option 3 — manual install
+### Option 4 — from source (developers)
+
+For hacking on it, or for a non-default profile:
 
 ```sh
 git clone https://github.com/LanFeng97/dsh-bottom-cost
 cd dsh-bottom-cost
-node tools/install.mjs
+node tools/install.mjs              # copy into the profile's node_modules + append one loader line
+node tools/install.mjs --dry-run    # print what it would do, write nothing
+node tools/install.mjs web          # target another profile (default: desktop)
 ```
 
-That copies the package into your DSH profile's `node_modules` and appends one loader line to the profile's `cordis.patch.yml`. It resolves your DSH home the same way the harness does — `$DSH_HOME`, then `~/.dsh` — and it is idempotent: re-run it after pulling to sync an update.
+It is idempotent — re-run it after a `git pull` to sync an update — and it resolves your DSH home the way the harness does (`$DSH_HOME`, then `~/.dsh`). This route needs a restart too. After that, changing `lib/client.js` only needs a page refresh; changing `lib/index.js` still needs a restart.
 
-```sh
-node tools/install.mjs --dry-run        # print what it would do, write nothing
-node tools/install.mjs web              # target another profile (default: desktop)
-```
-
-**Then restart DeepSeek Harness.** The host half is a Node module, so a config reload alone will not import it. After that, changing `lib/client.js` only needs a page refresh; changing `lib/index.js` still needs a restart.
-
-Installing by **copy** rather than a directory junction is deliberate: a junction gets realpath-resolved back into the clone, so any future bare import of a third-party package would resolve against the clone directory (which has no `node_modules`) and fail at load time — that is exactly how the short-lived `zod` import behaved in 0.2.0. Since 0.2.1 the plugin has no bare third-party imports, so a junction would work today; copy is kept because it matches the convention of the other plugins here and cannot break that way again.
-
-A manual copy install is **complete on its own**: this plugin has **no runtime dependencies at all** — its shape validation is a ~90-line file it ships (`lib/shape.js`), so there is nothing extra to install and nothing to fetch.
+The plugin has **no runtime dependencies at all** (its shape validation is a ~90-line file it ships, `lib/shape.js`), so this route installs nothing from the network. That is also why it installs by **copy** rather than a directory junction: a junction gets realpath-resolved back into the clone, so any future bare import of a third-party package would fail to resolve there at load time.
 
 ## How to read the UI
 

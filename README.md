@@ -45,6 +45,43 @@ It is idempotent — re-run it after a `git pull` to sync an update — and it r
 
 The plugin has **no runtime dependencies at all** (its shape validation is a ~90-line file it ships, `lib/shape.js`), so this route installs nothing from the network. That is also why it installs by **copy** rather than a directory junction: a junction gets realpath-resolved back into the clone, so any future bare import of a third-party package would fail to resolve there at load time.
 
+### Cannot install or cannot uninstall? Read this first
+
+**The desktop client can only install npm sources.** On the official desktop app, pasting a GitHub URL into "add plugin" may simply not install — that is the client's install boundary, not your network (its own message says so: "This desktop client can only install plugins published to npm"). Install by npm package name instead.
+
+**A flaky network breaks the GitHub source.** Behind that box is pnpm: it resolves `owner/repo` to a commit, then downloads a tarball from `codeload.github.com`, and the resolve step has a **6-second timeout**. A hiccup fails the install; retrying usually gets through.
+
+**Do not mix the two install routes (important).** Once you installed through the plugin manager / market, **do not also run `tools/install.mjs`** (and do not have an AI run it) — and vice versa. The script appends its own loader row to the profile's `cordis.patch.yml`, while the plugin manager declares the same component too. With the same component declared in **two layers**, the manager refuses to disable or uninstall it:
+
+> 卸载失败：其他配置仍在使用这个组合包的组件，请先停用它们
+
+(An uninstall failed: another configuration still uses this bundle's components — disable those first.)
+
+Its "disable" toggle cannot suppress the other layer either, which is why a **disabled plugin keeps working and survives a restart**.
+
+**What to do** (in order):
+
+1. Open `<DSH install dir>/dsh/profiles/<profile>/cordis.patch.yml` and **delete this whole block** (comment line plus the three `insert` lines):
+
+   ```yaml
+   # dsh-bottom-cost: ...
+   - insert:
+       - id: ui-session-cost
+         name: 'dsh-bottom-cost'
+   ```
+
+2. **Fully quit and restart DSH** (a page refresh is not enough);
+3. Back in the plugin manager, disable and uninstall now work;
+4. If it then says the profile patch cannot uniquely address the row, a second declaration exists somewhere else — send me that profile's `cordis.patch.yml` and I will give you the exact edit.
+
+**One-line self-check** (in `<DSH install dir>/dsh/profiles/<profile>/`):
+
+```sh
+grep -n "dsh-bottom-cost" cordis.patch.yml package.json
+```
+
+A hit in `package.json` = installed by the manager (normal). A hit in **`cordis.patch.yml` too** = the two-layer problem above.
+
 ## How to read the UI
 
 In the screenshot: the bottom line is the **stats row under the composer** — `◎ ¥5.294 · ¥0.9230` is this plugin, sitting in the same row as the built-in `15 轮 388 步 · 228 tok/s` (session stats) and `147M tok · 缓存命中 99%` (token usage) pills, with the context meter at the far right. Above it is the **expanded panel**.

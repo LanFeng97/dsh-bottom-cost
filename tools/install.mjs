@@ -66,6 +66,38 @@ function copyRecursive(from, to) {
   }
 }
 
+// ---- 0. 冲突检查：本包是否已经由插件管理（pnpm）装在同一个 profile 里 --------
+//
+// 两条路线混用会造成**同一个组件被两层声明**：插件管理声明它自己的那份，本脚本再往
+// profile 的 cordis.patch.yml 追加一行。此后插件管理会拒绝停用与卸载，报
+// 「其他配置仍在使用这个组合包的组件」（reasonBundleInUse），而且它那个"停用"开关
+// 也压不住另一层——用户会看到"停用了还在跑"。所以这里提前讲清楚，让两条路线二选一。
+const profileManifest = path.join(profileDir, 'package.json')
+let managedByPnpm = false
+try {
+  // 去掉可能的 BOM：JSON.parse 遇到 BOM 会直接抛错，而这个文件不由本插件写。
+  const manifest = JSON.parse(fs.readFileSync(profileManifest, 'utf8').replace(/^\uFEFF/, ''))
+  for (const field of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+    if (manifest[field] !== undefined && manifest[field][PACKAGE_NAME] !== undefined) managedByPnpm = true
+  }
+} catch {
+  // 读不到或不是 JSON：不阻断安装，只是没有这条提醒。
+}
+if (managedByPnpm) {
+  console.warn([
+    '',
+    `⚠ 这个 profile 的 package.json 里已经声明了 ${PACKAGE_NAME} —— 说明它是用`,
+    '  「插件管理 / 插件市场」装的（pnpm 依赖）。再用本脚本装一次会让**同一个组件被两层声明**，',
+    '  随后插件管理会拒绝停用与卸载（报「其他配置仍在使用这个组合包的组件」），那个"停用"开关也压不住另一层。',
+    '',
+    '  两条路线请二选一：',
+    `    · 想继续用插件管理：不要再跑本脚本，直接在那里停用/卸载/更新；`,
+    `    · 想改用本脚本：先在插件管理里卸载它，再重跑本脚本。`,
+    '  详见 README「装不上 / 卸不掉？（先看这里）」。',
+    '',
+  ].join('\n'))
+}
+
 // ---- 1. 同步文件 ----------------------------------------------------------
 
 const linkStat = fs.lstatSync(targetDir, { throwIfNoEntry: false })

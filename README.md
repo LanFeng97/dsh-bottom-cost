@@ -49,6 +49,8 @@ The plugin has **no runtime dependencies at all** (its shape validation is a ~90
 
 In the screenshot: the bottom line is the **stats row under the composer** — `◎ ¥5.294 · ¥0.9230` is this plugin, sitting in the same row as the built-in `15 轮 388 步 · 228 tok/s` (session stats) and `147M tok · 缓存命中 99%` (token usage) pills, with the context meter at the far right. Above it is the **expanded panel**.
 
+Clicking a **Turn N** heading jumps the conversation to that turn: it read-only drives the built-in turn rail on the right, so a turn that is not loaded yet gets paged in by the app itself before landing. When it cannot locate the turn, the panel says so at the bottom instead of failing silently.
+
 **The chip in the stats row**
 
 ```
@@ -113,6 +115,7 @@ The price list is stored in `<DSH_HOME>/dsh-bottom-cost/pricebook.json` (atomic 
 - **One file written**: `<DSH_HOME>/dsh-bottom-cost/pricebook.json`.
 - The three price routes are **loopback + same-origin fenced** (the same guard sibling DSH plugins use).
 - The host half reads no credentials, writes no session data, and runs no timers.
+- The **Turn N** headings read-only drive the built-in turn navigation: they read the tick buttons' `aria-label` (which carries the turn number) and `aria-current`, and invoke the tick's own click. If the rail is unavailable it falls back to the `data-chat-turn` anchors on transcript rows. The plugin injects no nodes, changes no layout, and hardcodes no build-hashed class names — but if those semantic attributes ever change, jumping breaks and the panel reports the failure instead of failing silently.
 
 ### Why the shape validation is hand-rolled
 

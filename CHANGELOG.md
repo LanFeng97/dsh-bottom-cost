@@ -3,6 +3,16 @@
 本插件的所有显著变更。版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)；
 投影状态的形状变化会体现为 `stateVersion` 递增（旧检查点会自动作废并重放，不需要你手工清理）。
 
+## [0.4.0] - 2026-10-13
+
+### 新增
+
+- **点面板里的「第 N 轮」跳到对话中的那一轮**。做法是**只读地驱动官方自己的轮次导航轨道**：轨道刻度是带 `aria-label`（含轮号）的 `button`，点它即调用官方的 `onNavigate`——已加载的轮次直接落位，**未加载的轮次由官方先取回更早的分页再落位**（官方文案键 `chat.turnNavigation.jumpLoad` 就是为这条路径存在的）。这两条我们都不重新实现。
+  - 刻度不在已挂载窗口时（轨道自身也是虚拟挂载），先按官方文档的固定间距（每个已开始轮次一颗刻度、相隔 10px）把轨道滚过去，等一帧再重查，最多三次。
+  - 轨道不可用时回落到 transcript 行上的 `data-chat-turn`，并按官方自用的阅读线（视口高度的 20%、上限 96px）对齐。
+  - 两处都定位不到时，面板底部给出说明——不静默失败。
+  - **不写死任何构建哈希类名**（形如 `xpvNua_mark` 会随版本变），只用语义属性：标签里的轮号、`aria-current`、`data-chat-turn`。不注入节点、不改官方布局。
+
 ## [0.3.0] - 2026-10-13
 
 ### 变更
@@ -69,6 +79,7 @@
   每次调用按**发生时刻**的档位计费。
 - 非 DeepSeek 官方路由一律「未计价」并统计次数，不假装是 0 元。
 
+[0.4.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.4.0
 [0.3.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.3.0
 [0.2.1]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.2.1
 [0.2.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.2.0

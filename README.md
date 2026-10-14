@@ -11,10 +11,14 @@ A **session cost** chip for [DeepSeek Harness](https://github.com/deepseek-ai/de
 ### Option 1 — install it from the DSH UI (simplest)
 
 1. Open **插件 → 添加插件** (Plugins → Add plugin) in the sidebar;
-2. Paste the repository URL: `https://github.com/LanFeng97/dsh-bottom-cost`;
+2. Type either one:
+   - the package name **`dsh-bottom-cost`** — works everywhere, including the official desktop client (which can only install npm sources), or
+   - the repository URL `https://github.com/LanFeng97/dsh-bottom-cost` — works on `dsh web`; the market resolves it to a tarball from codeload, so a flaky network can fail it;
 3. Click **安装** (Install), then **restart DeepSeek Harness** as its banner tells you to (close the running `dsh` process and start it again, e.g. `dsh web`).
 
 The host half is a Node module, so **a config reload alone will not import it** — that restart is not optional. Once restarted, open the UI and the chip is there; no page refresh needed.
+
+**Updating later is explicit.** An installation pins the exact version (the profile ends up with `"dsh-bottom-cost": "0.5.1"`), so a new release reaches you when you press **更新** (Update) in the plugin manager — nothing changes under you in between.
 
 ### Option 2 — let your AI install it
 

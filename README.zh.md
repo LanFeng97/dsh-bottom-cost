@@ -11,10 +11,14 @@
 ### 方式一：在 DSH 界面里装（最简单）
 
 1. 侧栏打开**插件 → 添加插件**；
-2. 粘贴仓库地址：`https://github.com/LanFeng97/dsh-bottom-cost`；
+2. 二选一填进去：
+   - 包名 **`dsh-bottom-cost`** —— 到处都能装，**包括官方桌面客户端**（它只支持 npm 源）；
+   - 仓库地址 `https://github.com/LanFeng97/dsh-bottom-cost` —— 在 `dsh web` 上可用；它要经 codeload 下载 tarball，网络抖动会失败；
 3. 点**安装**，再按它的提示**重启 DeepSeek Harness**（关闭当前 `dsh` 进程后重新运行，例如 `dsh web`）。
 
 宿主半区是 Node 模块，**只重载配置不会被导入**，所以这一步重启不能省。重启后打开界面就能看到胶囊，不需要再刷新页面。
+
+**以后的更新是显式的。** 安装会钉住精确版本（profile 里会写成 `"dsh-bottom-cost": "0.5.1"`），所以新版本要你在插件管理里点**更新**才会生效——它不会在你不知情的时候自己变。
 
 ### 方式二：让你的 AI 帮你装
 

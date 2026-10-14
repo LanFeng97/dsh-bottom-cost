@@ -3,6 +3,15 @@
 本插件的所有显著变更。版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)；
 投影状态的形状变化会体现为 `stateVersion` 递增（旧检查点会自动作废并重放，不需要你手工清理）。
 
+## [0.5.2] - 2026-10-14
+
+### 文档
+
+- **安装方式改为「输入包名 `dsh-bottom-cost`」优先**，仓库地址作为 `dsh web` 上的备选写在同一条里（它要经 codeload 下载 tarball，网络抖动会失败）。包名这条路到处都能用，**包括官方桌面客户端——它只支持 npm 源**。
+- 新增一句「**更新是显式的**」：安装会钉住精确版本（profile 里写成 `"dsh-bottom-cost": "0.5.1"` 这种），新版本要你在插件管理里点**更新**才生效。
+
+（纯文档改动；之所以要单独发一个版本，是因为**已经发布的 npm 版本不可覆盖**，npm 页面上的 README 只会随新版本更新。）
+
 ## [0.5.1] - 2026-10-13
 
 ### 修复
@@ -111,6 +120,7 @@
   每次调用按**发生时刻**的档位计费。
 - 非 DeepSeek 官方路由一律「未计价」并统计次数，不假装是 0 元。
 
+[0.5.2]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.2
 [0.5.1]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.1
 [0.5.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.0
 [0.4.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.4.0

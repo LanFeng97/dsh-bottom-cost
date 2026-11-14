@@ -3,6 +3,15 @@
 本插件的所有显著变更。版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)；
 投影状态的形状变化会体现为 `stateVersion` 递增（旧检查点会自动作废并重放，不需要你手工清理）。
 
+## [0.6.0] - 2026-10-17
+
+### 新增
+
+- **首次安装后的引导弹窗**：装好后第一次打开界面弹一次，说明费用胶囊在哪、面板里的太阳／月亮只切换本插件的明暗、"价目表按需刷新"意味着平时不发请求，并邀请顺手去仓库**点个 Star**；点 Star 或"知道了"都算看过，之后不再出现。
+  - 用框架的 `Modal` primitive，遮罩、Esc 关闭、焦点还原与明暗主题都由官方实现负责，不自绘弹层。
+  - "已看过"记在**浏览器 `localStorage`**（键 `dshbc.star.v1`）：不写文件、不发请求、不进会话数据；存储不可用时按"已看过"处理——宁可少弹一次，也不每次刷新都弹。
+  - 星标按钮是 `<a target="_blank">`，在桌面端交给系统的链接处理，比 `window.open` 稳。
+
 ## [0.5.2] - 2026-10-14
 
 ### 文档
@@ -120,6 +129,7 @@
   每次调用按**发生时刻**的档位计费。
 - 非 DeepSeek 官方路由一律「未计价」并统计次数，不假装是 0 元。
 
+[0.6.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.6.0
 [0.5.2]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.2
 [0.5.1]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.1
 [0.5.0]: https://github.com/LanFeng97/dsh-bottom-cost/releases/tag/v0.5.0

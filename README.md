@@ -96,6 +96,8 @@ Each turn also shows **which model it used**, right of the turn number (`v4-pro`
 
 The **sun (or moon)** at the right of the title row is a light/dark switch that applies **to this plugin's content only**: both the panel and the cost chip in the stats row flip to the other palette, and the app's global theme is untouched. The icon shows the current mode (sun = light, moon = dark), and the colours come from the two official theme definitions — so each mode matches the rest of DSH while being the opposite of it. When the chip is on the opposite theme it gets its own themed background, since near-white text on the light stats row would otherwise be unreadable.
 
+**The first launch after installing shows a one-time welcome dialog.** It says where the chip is, that the sun/moon button switches only this plugin, and that the price table refreshes on demand (no requests otherwise) — and it invites you to **star the repo** if you find it useful. Either button counts as "seen" and it never comes back; that flag lives in the browser's `localStorage` (key `dshbc.star.v1`), so it **writes no file, sends no request and never touches session data**.
+
 **The chip in the stats row**
 
 ```

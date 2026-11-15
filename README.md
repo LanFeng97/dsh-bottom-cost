@@ -176,8 +176,8 @@ The alternative was `zod`, as DSH's own `dsh-token-meter` uses. It is not wrong,
 
 ### Official extension points, not DOM injection
 
-- The chip registers into the built-in slot **`conversation.composer.dock`** (`order: 1`; the shipped `stats` pills take `order: 0`). That slot *is* the stats row under the composer, a `display:flex; gap:12px` row, so the chip is a first-class sibling of the built-in pills — no DOM poking, no fight with re-renders.
-- The panel reuses `useAnchoredPosition` and `useDismissOnOutsidePointer` from `@deepseek-ai/dsh-client-ui-primitives`, the same pair the built-in stats dialogs use, so placement, clamping, outside-click and Esc behave identically.
+- The chip registers into the built-in slot **`conversation.composer.dock`** (`order: 2`; the shipped pills are `activity` at `order: 0` and `usage` at `order: 1`). That slot *is* the stats row under the composer, a `display:flex; gap:12px` row, so the chip is a first-class sibling of the built-in pills — no DOM poking, no fight with re-renders.
+- The panel is placed with **CSS Anchor Positioning** — `anchor-name` on the chip, `position-anchor` plus `anchor()` offsets on the portaled panel, and `@position-try` fallbacks for a narrow window or too little room above — the same technique the built-in stats dialogs use. DSH removed `useAnchoredPosition` in 0.2.2-alpha.2, so placement is pure CSS now, with no JS measuring. `useDismissOnOutsidePointer` and Esc still handle closing.
 - All styling goes through theme CSS variables (`--dsw-*`), so it follows your theme instead of hard-coding colors.
 
 ### Token facts travel as a session projection
@@ -214,7 +214,7 @@ npm run test:schema   # node tools/schema-check.mjs — schema ↔ state ↔ vie
 
 ## Compatibility
 
-- DSH **≥ 0.2.0-rc.2** (built and verified against 0.2.0-rc.2).
+- DSH **≥ 0.2.2-rc.1** (panel placement is CSS-anchored from 0.2.2 on; built and verified against 0.2.2-rc.3). Stay on `0.6.0` with older DSH releases — that version uses `useAnchoredPosition`, which 0.2.2-alpha.2 removed, so the whole chip fails to render on 0.2.2.
 - Node **≥ 20**.
 - **No runtime dependencies.** The projection schemas are validated by the plugin's own `lib/shape.js`.
 

@@ -175,8 +175,8 @@ DSH 的投影注册表向每个单元索取 `stateSchema` 与 `wire.viewSchema`�
 
 ### 用官方扩展点，不做 DOM 注入
 
-- 胶囊注册进内置 slot **`conversation.composer.dock`**（`order: 1`；随包发布的 `stats` 两颗胶囊是 `order: 0`）。该 slot *就是* 输入框下方那条统计栏，容器是 `display:flex; gap:12px` 的横向行，因此胶囊是内置胶囊的同级兄弟——不用 DOM 插桩，也不怕官方重渲染。
-- 面板复用 `@deepseek-ai/dsh-client-ui-primitives` 的 `useAnchoredPosition` 与 `useDismissOnOutsidePointer`，与内置统计弹层同一套，所以定位、夹取、点击外部关闭、Esc 的行为完全一致。
+- 胶囊注册进内置 slot **`conversation.composer.dock`**（`order: 2`；随包发布的两颗胶囊是 `activity` 的 `order: 0` 与 `usage` 的 `order: 1`）。该 slot *就是* 输入框下方那条统计栏，容器是 `display:flex; gap:12px` 的横向行，因此胶囊是内置胶囊的同级兄弟——不用 DOM 插桩，也不怕官方重渲染。
+- 面板用 **CSS Anchor Positioning** 贴住胶囊（胶囊一侧 `anchor-name`，portal 出去的面板 `position-anchor` + `anchor()` 偏移，`@position-try` 兜住窄窗与上方不够高两种放不下），与内置统计弹层同一套写法；关闭交给 `useDismissOnOutsidePointer` 与 Esc。0.2.2-alpha.2 起官方移除了 `useAnchoredPosition`，这边随之改为纯 CSS 定位，不再有 JS 量测。
 - 样式只走主题 CSS 变量（`--dsw-*`），跟随你的主题而不是写死颜色。
 
 ### token 事实通过会话投影传输
@@ -215,7 +215,7 @@ npm run test:schema   # node tools/schema-check.mjs —— schema ↔ 状态 ↔
 
 ## 兼容性
 
-- DSH **≥ 0.2.0-rc.2**（开发与验证均在 0.2.0-rc.2 上完成）。
+- DSH **≥ 0.2.2-rc.1**（0.2.2 起的面板定位改为 CSS 锚点；开发与验证均在 0.2.2-rc.3 上完成）。更旧的 DSH 请留在 `0.6.0`——那一版用的是 0.2.2-alpha.2 已移除的 `useAnchoredPosition`，在 0.2.2 上会整颗胶囊渲染失败。
 - Node **≥ 20**。
 - **零运行时依赖**：投影 schema 由插件自带的 `lib/shape.js` 校验。
 

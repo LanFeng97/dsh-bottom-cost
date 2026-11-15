@@ -3,6 +3,17 @@
 本插件的所有显著变更。版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)；
 投影状态的形状变化会体现为 `stateVersion` 递增（旧检查点会自动作废并重放，不需要你手工清理）。
 
+## [0.6.1] - 2026-11-15
+
+### 修复
+
+- **兼容 DSH 0.2.2：费用胶囊不再整颗消失**。DSH 0.2.2-alpha.2 从 `@deepseek-ai/dsh-client-ui-primitives` 移除了 `useAnchoredPosition` 值导出，而本插件的胶囊在**每次渲染**时都会调用它，于是抛错、被 slot 的错误边界挡掉——表现就是统计栏里那颗 `◎ ¥… · ¥…` 不见了。
+  - 面板定位改为 **CSS Anchor Positioning**：胶囊一侧写 `anchor-name`（`useId` 保证跨渲染稳定、多实例唯一），portal 到 body 的面板写 `position-anchor`，位置由 `anchor(left)` / `anchor(top)` + `max(12px, …)` 夹取；`@position-try` 兜住"窗口更窄"与"胶囊贴近顶部、上方放不下"两种情况。
+  - 与官方 `@deepseek-ai/dsh-client-ui-chat` 的 `StatsPills` / `stat-dialog.module.css` 同一套写法，所以缩放与窄窗下的夹取行为跟内置统计弹层一致；不再有 JS 量测与 `ResizeObserver`。
+  - 点外面关闭除 `useDismissOnOutsidePointer` 外补了一个 `click` 捕获监听：用键盘激活兄弟胶囊只派发 `click` 不派发 `pointerdown`，否则那一颗会与本面板同时打开。
+- **胶囊的 slot `order` 1 → 2**。官方那两颗胶囊现在是 `activity`（order 0）与 `usage`（order 1），继续用 1 会与 `usage` 并列、排序取决于注册顺序；改成 2 才稳定排在它们右边。
+- `dsh.engines.dsh` 收紧为 **`>=0.2.2-rc.1`**：这一版的定位写法跟随 0.2.2。旧版 DSH 请留在 0.6.0（那一版依赖已被移除的 `useAnchoredPosition`，在 0.2.2 上不可用）。
+
 ## [0.6.0] - 2026-10-17
 
 ### 新增
